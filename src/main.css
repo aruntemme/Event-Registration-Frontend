@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+.input {
+  @apply appearance-none block w-full text-gray-800 border border-gray-300 rounded p-2 leading-tight;
+}
+
+.input:focus {
+  @apply outline-none bg-white border-gray-700;
+}
+
+.label {
+  @apply block uppercase tracking-wide text-gray-800 text-xs font-bold mb-2;
+}
+
+.select {
+  @apply appearance-none py-3 px-4 pr-8 block w-full  border border-gray-300 text-gray-800
+   rounded leading-tight;
+   -webkit-appearance: none;
+}
+
+.select:focus {
+  @apply outline-none bg-white border-gray-700;
+}
+
+.link {
+  @apply no-underline;
+}
+
+.link-gray {
+  @apply text-gray-800;
+}
+
+.link-gray:hover {
+  @apply text-gray-800;
+}
+
+.btn-primary {
+  background: #7a2ad6;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background: #5d22a1;
+
+}
