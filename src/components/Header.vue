@@ -1,5 +1,5 @@
 <template>
-  <header class="bg-custom py-4">
+  <header class="bg-purple-600 py-4">
     <div class="container m-auto flex flex-wrap items-center justify-end px-4">
       <div class="flex-1 flex items-center">
         <a href="/" class="uppercase text-xl font-semibold font-mono "
@@ -19,14 +19,14 @@
           v-if="!signedIn()"
           class=" w-12/12 p-2 text-sm font-medium text-white bg-black rounded-md bg-opacity-20 hover:bg-opacity-30 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75"
         >
-          Sign up
+          Sign in
         </router-link>
         <router-link
           to="/signup"
           v-if="!signedIn()"
           class=" w-12/12 p-2 text-sm font-medium bg-white text-purple-800 rounded-md hover:bg-opacity-70 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75"
         >
-          Sign in
+          Sign up
         </router-link>
         <div v-if="signedIn()" class="">
           <Menu as="div" class="relative inline-block text-left">
@@ -34,7 +34,7 @@
               <MenuButton
                 class="inline-flex justify-center w-full px-4 py-2 text-sm font-medium text-white bg-black rounded-md bg-opacity-20 hover:bg-opacity-30 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75"
               >
-                Account
+                Account<unicon name="angle-down" class="ml-2" fill="white"></unicon>
               </MenuButton>
             </div>
 
@@ -136,6 +136,7 @@ export default {
         .delete('/signin')
         .then(response => {
           delete localStorage.csrf
+          delete localStorage.email
           delete localStorage.signedIn
           this.$router.replace('/signin')
         })

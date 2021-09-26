@@ -11,7 +11,7 @@
             {{ event.title }}
           </h3>
         </li>
-        <li class="py-4 mx-2 mt-7 border-t" :key="event.id" :record="event">
+        <li class="py-4 mx-2 mt-6 pt-6 border-t" :key="event.id" :record="event">
           <div class="flex mt-4">
             <div class="flex flex-col gap-2 justify-between pr-4">
               <p class="flex font-semibold text-5xl items-center">
@@ -19,20 +19,20 @@
               </p>
               <p class="text-xl mt-4">{{ event.description }}</p>
               <div
-                class="flex flex-row gap-2 mt-4"
+                class="flex md:flex-row gap-2 w-full flex-wrap my-5 mb-7"
                 v-html="convertIntoTags(event.tags)"
               ></div>
               <div class="flex flex-col gap-4 mt-3">
-                <p class="flex felx-row gap-1">Date: {{ event.date }}</p>
+                <p class="flex felx-row gap-1"><span class="font-semibold uppercase mr-1">date: </span> {{ event.date }}</p>
                 <p class="flex felx-row gap-1">
-                  Location: {{ event.location }}
+                  <span class="font-semibold uppercase mr-1">Location: </span> {{ event.location }}
                 </p>
                 <p class="flex felx-row gap-1">
-                  Duration: {{ secondsToHms(event.duration) }}
+                 <span class="font-semibold uppercase mr-1">Duration: </span> {{ secondsToHms(event.duration) }}
                 </p>
-                <p class="flex felx-row gap-1">Cost: ₹ {{ event.fees }}</p>
+                <p class="flex felx-row gap-1"><span class="font-semibold uppercase mr-1">Cost: </span> ₹ {{ event.fees }}</p>
                 <p class="flex felx-row gap-1">
-                  Seats Available: {{ event.maxparticipants }}
+                  <span class="font-semibold uppercase mr-1">Seats Available: </span> {{ event.maxparticipants }}
                 </p>
               </div>
             </div>
@@ -55,7 +55,7 @@
 
             <button
               v-else
-              class=" text-sm btn-primary mt-4 font-bold p-4 rounded-md h-full w-7/12 "
+              class=" text-sm btn-primary mt-4 font-bold p-4 rounded-md h-full w-full md:w-7/12 "
               @click.prevent="registerEvent(event)"
             >
               Register
@@ -191,7 +191,7 @@ export default {
         const tagsArray = tags.split(',')
         let appendString = ''
         tagsArray.forEach(tag => {
-          appendString += `<div class="rounded-full p-1 py-2 h-full w-full bg-purple-200 text-center">${tag}</div>`
+          appendString += `<div class="rounded-lg py-1 px-2 w-m-xl bg-black bg-opacity-20 border border-gray-400 text-center">${tag}</div>`
         })
         return appendString
       }
@@ -214,7 +214,11 @@ export default {
       if (hours == 0) {
         return +minutes + ' minutes' // Return in MM:SS format
       } else {
-        return hours + 'h' + minutes + 'm' // Return in HH:MM:SS format
+        let hoursText = ' hours'
+        if (hours === 1) {
+          hoursText = ' hour'
+        }
+        return hours + hoursText + minutes + 'minutes' // Return in HH:MM:SS format
       }
     },
     deleteEvent (id) {

@@ -1,8 +1,12 @@
 <template>
 <div>
 <Header />
+
   <div class=" w-10/12 md:w-5/12 m-auto py-10">
-        <form @submit.prevent="addEvent">
+    <h3 class="text-md font-mono uppercase font-semibold text-gray-700 ml-0 mx-2" >
+    <router-link to="/events">All Events</router-link> > New Event
+  </h3>
+        <form class="mt-6 pt-6 border-t" @submit.prevent="addEvent">
       <div class="mb-6 form-group">
         <label for="event_title" class="label">Event Name</label>
         <input

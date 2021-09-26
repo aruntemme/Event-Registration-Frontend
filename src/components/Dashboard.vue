@@ -5,29 +5,39 @@
     <div class="text-red" v-if="error">{{ error }}</div>
 
     <ul class="list-reset mt-4">
-      <li><h3 class="text-md font-mono uppercase font-semibold text-gray-700 mx-2"><router-link to="/events">All Events</router-link>{{title}}</h3></li>
+      <li><h3 class="text-md font-mono uppercase font-semibold text-gray-700 border-b mb-4 pb-6 mx-2"><router-link to="/events">All Events</router-link>{{title}}</h3></li>
       <li class="py-4 mx-2" v-for="event in events" :key="event.id" :record="event">
           <router-link :to="{ name: 'event', params: { id: event.id }}" >
         <div class="flex border border-gray-400 p-4 rounded-md shadow-sm cursor-pointer focus:shadow-lg hover:shadow-lg ">
-          <div class="flex flex-col gap-2 justify-between pr-4">
-          <p class="flex font-semibold text-2xl items-center">
+          <div class="flex flex-col gap-2 justify-between pr-4 w-full ">
+          <p class="flex font-semibold text-3xl items-center">
             {{ event.title }}
           </p>
-          <p class="block"> {{ event.description }}</p>
-          <div class="flex flex-row gap-2"  v-html="convertIntoTags(event.tags)"></div>
-          <div class="flex flex-row gap-4 mt-3">
-            <p class="flex felx-row gap-1">time {{ secondsToHms(event.duration) }}</p>
-            <p class="flex felx-row gap-1">₹ {{ event.fees }}</p>
-            <p class="flex felx-row gap-1">people{{ event.maxparticipants }}</p>
-            <p class="flex felx-row gap-1">by {{ event.createdby === userEmail ? 'you' : event.createdby }}</p>
+          <p class=""> {{ event.description.substring(0,150) }} {{ event.description.length > 150 ? '...' : '' }}</p>
+          <div class="flex md:flex-row gap-2 w-full flex-wrap"  v-html="convertIntoTags(event.tags)"></div>
+          <div class="grid grid-cols-4 gap-4 mt-3">
+            <div class="flex felx-col gap-1 md:col-span-1 col-span-2 bg-purple-200 rounded-lg justify-center items-center  w-full h-12 text-center text-white">
+              <unicon name="stopwatch" fill="black"></unicon>
+              <p class="text-black">{{ secondsToHms(event.duration) }}</p>
+            </div>
+            <div class="flex felx-col gap-1 md:col-span-1 col-span-2 bg-purple-200 rounded-lg justify-center items-center  w-full h-12 text-center text-white">
+              <unicon name="rupee-sign" fill="black"></unicon>
+              <p class="text-black">{{ event.fees }}</p>
+              </div>
+            <div class="flex felx-col gap-1 md:col-span-1 col-span-2 bg-purple-200 rounded-lg justify-center items-center  w-full h-12 text-center text-white">
+              <unicon name="user-plus" fill="black"></unicon>
+              <p class="text-black">{{ event.maxparticipants }}</p>
+            </div>
+            <div class="flex felx-col gap-1 md:col-span-1 col-span-2 bg-purple-200 rounded-lg justify-center items-center  w-full h-12 text-center text-white">
+              <unicon name="map-marker-alt" fill="black"></unicon>
+              <p class="text-black">{{ event.location }}</p>
+            </div>
+            <div class="flex felx-col gap-1  col-span-4 bg-purple-200 rounded-lg justify-center items-center w-full  px-1 h-12 text-center text-white">
+              <unicon name="user-circle" fill="black"></unicon>
+              <p class="text-black">{{ event.createdby === userEmail ? 'you' : event.createdby }}</p>
+              </div>
           </div>
         </div>
-
-        <!-- <button class="bg-transparent text-sm hover:bg-blue hover:text-white text-blue border border-blue no-underline font-bold py-2 px-4 mr-2 rounded"
-          @click.prevent="editRecord(event)">Edit</button>
-
-        <button class="bg-transparent text-sm hover:bg-red text-red hover:text-white no-underline font-bold py-2 px-4 rounded border border-red"
-         @click.prevent="removeRecord(event)">Delete</button> -->
         </div>
         </router-link>
       </li>
@@ -73,6 +83,9 @@ export default {
           this.events = []
           events.forEach((value, index) => {
             if (this.$route.name === 'created') {
+              if (!localStorage.csrf) {
+                this.$router.replace('/events')
+              }
               if (value.createdby === localStorage.email) {
                 this.events.push(value)
                 this.title = ' > Created Events'
@@ -89,7 +102,7 @@ export default {
       const tagsArray = tags.split(',')
       let appendString = ''
       tagsArray.forEach(tag => {
-        appendString += `<div class="rounded-full p-1 py-2 h-full w-full bg-purple-200 text-center">${tag}</div>`
+        appendString += `<div class="rounded-lg py-1 px-2 w-m-xl bg-black bg-opacity-20 border border-gray-400 text-center">${tag}</div>`
       })
       return appendString
     },
