@@ -5,7 +5,7 @@
     <div class="text-red" v-if="error">{{ error }}</div>
 
     <ul class="list-reset mt-4">
-      <li><h3 class="text-md font-mono uppercase font-semibold text-gray-700 mx-2"><router-link to="/events">All Events</router-link></h3></li>
+      <li><h3 class="text-md font-mono uppercase font-semibold text-gray-700 mx-2"><router-link to="/events">All Events</router-link>{{title}}</h3></li>
       <li class="py-4 mx-2" v-for="event in events" :key="event.id" :record="event">
           <router-link :to="{ name: 'event', params: { id: event.id }}" >
         <div class="flex border border-gray-400 p-4 rounded-md shadow-sm cursor-pointer focus:shadow-lg hover:shadow-lg ">
@@ -16,9 +16,10 @@
           <p class="block"> {{ event.description }}</p>
           <div class="flex flex-row gap-2"  v-html="convertIntoTags(event.tags)"></div>
           <div class="flex flex-row gap-4 mt-3">
-            <p class="flex felx-row gap-1"><ClockTimeFiveOutline :size="22" /> {{ secondsToHms(event.duration) }}</p>
+            <p class="flex felx-row gap-1">time {{ secondsToHms(event.duration) }}</p>
             <p class="flex felx-row gap-1">₹ {{ event.fees }}</p>
-            <p class="flex felx-row gap-1"><AccountMultipleCheckOutline :size="22" />{{ event.maxparticipants }}</p>
+            <p class="flex felx-row gap-1">people{{ event.maxparticipants }}</p>
+            <p class="flex felx-row gap-1">by {{ event.createdby === userEmail ? 'you' : event.createdby }}</p>
           </div>
         </div>
 
@@ -37,13 +38,10 @@
 
 <script>
 import Header from './Header.vue'
-import ClockTimeFiveOutline from 'vue-material-design-icons/ClockTimeFiveOutline.vue'
-import AccountMultipleCheckOutline from 'vue-material-design-icons/AccountMultipleCheckOutline.vue'
+
 export default {
   components: {
-    Header,
-    ClockTimeFiveOutline,
-    AccountMultipleCheckOutline
+    Header
   },
   name: 'Events',
   data () {
@@ -52,20 +50,41 @@ export default {
       events: [],
       newRecord: [],
       error: '',
-      editedRecord: ''
+      editedRecord: '',
+      title: '',
+      userEmail: ''
+    }
+  },
+  watch: {
+    $route (to, from) {
+      this.renderCurrentCards()
     }
   },
   created () {
-    // if (!localStorage.signedIn) {
-    //   this.$router.replace('/')
-    // } else {
-    this.$http.secured.get('/api/v1/events')
-      .then(response => { this.events = response.data })
-      .catch(error => this.setError(error, 'Something went wrong'))
-
-  //  }
+    this.userEmail = localStorage.email
+    this.renderCurrentCards()
   },
   methods: {
+    renderCurrentCards () {
+      let events = []
+      this.$http.secured.get('/api/v1/events')
+        .then((response) => {
+          events = response.data
+          this.events = []
+          events.forEach((value, index) => {
+            if (this.$route.name === 'created') {
+              if (value.createdby === localStorage.email) {
+                this.events.push(value)
+                this.title = ' > Created Events'
+              }
+            } else {
+              this.title = ''
+              this.events.push(value)
+            }
+          })
+        })
+        .catch(error => this.setError(error, 'Something went wrong'))
+    },
     convertIntoTags (tags) {
       const tagsArray = tags.split(',')
       let appendString = ''
@@ -92,16 +111,16 @@ export default {
     setError (error, text) {
       this.error = (error.response && error.response.data && error.response.data.error) || text
     },
-    getArtist (record) {
-      const recordArtistValues = this.artists.filter(artist => artist.id === record.artist_id)
-      let artist
+    // getArtist (record) {
+    //   const recordArtistValues = this.artists.filter(artist => artist.id === record.artist_id)
+    //   let artist
 
-      recordArtistValues.forEach(function (element) {
-        artist = element.name
-      })
+    //   recordArtistValues.forEach(function (element) {
+    //     artist = element.name
+    //   })
 
-      return artist
-    },
+    //   return artist
+    // },
     addRecord () {
       const value = this.newRecord
       if (!value) {
@@ -114,21 +133,6 @@ export default {
           this.newRecord = ''
         })
         .catch(error => this.setError(error, 'Cannot create record'))
-    },
-    removeRecord (record) {
-      this.$http.secured.delete(`/api/v1/records/${record.id}`)
-        .then(response => {
-          this.records.splice(this.records.indexOf(record), 1)
-        })
-        .catch(error => this.setError(error, 'Cannot delete record'))
-    },
-    editRecord (record) {
-      this.editedRecord = record
-    },
-    updateRecord (record) {
-      this.editedRecord = ''
-      this.$http.secured.patch(`/api/v1/records/${record.id}`, { record: { title: record.title, year: record.year, artist_id: record.artist } })
-        .catch(error => this.setError(error, 'Cannot update record'))
     }
   }
 }

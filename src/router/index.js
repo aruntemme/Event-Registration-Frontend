@@ -1,19 +1,26 @@
-import Vue from 'vue'
-import Router from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import Signin from '@/components/Signin.vue'
 import Signup from '@/components/Signup.vue'
 import Dashboard from '@/components/Dashboard.vue'
 import Events from '@/components/Events.vue'
 import CreateEvent from '@/components/CreateEvent.vue'
+import NotFound from '@/components/NotFound.vue'
 
-Vue.use(Router)
-
-export default new Router({
-  mode: 'history',
+export default createRouter({
+  history: createWebHistory(),
   routes: [
+    {
+      path: '/',
+      component: Signin
+    },
     {
       path: '/events',
       name: 'Dashboard',
+      component: Dashboard
+    },
+    {
+      path: '/events/created',
+      name: 'created',
       component: Dashboard
     },
     {
@@ -27,9 +34,9 @@ export default new Router({
       component: Events
     },
     {
-      path: '/',
-      name: 'Signin',
-      component: Signin
+      path: '/events/:id/edit',
+      name: 'EditEvent',
+      component: CreateEvent
     },
     {
       path: '/signup',
@@ -40,6 +47,10 @@ export default new Router({
       path: '/signin',
       name: 'Signin',
       component: Signin
+    },
+    {
+      path: '/:catchAll(.*)',
+      component: NotFound
     }
   ]
 })

@@ -39,10 +39,23 @@
 
 .btn-primary {
   background: #7a2ad6;
+  color: white;
 }
 
 .btn-primary:hover,
 .btn-primary:focus {
   background: #5d22a1;
+
+}
+
+.btn-outline-danger {
+  border: 1px solid #db2626;
+  color: red;
+}
+
+.btn-outline-danger:hover,
+.btn-outline-danger:focus {
+  background: #db2626;
+  color: white;
 
 }
