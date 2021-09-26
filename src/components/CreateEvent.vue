@@ -1,9 +1,24 @@
 <template>
 <div>
 <Header />
+<form @submit.prevent="submit">
+  <div class="form-group" :class="{ 'form-group--error': $v.name.$error }">
+    <label class="form__label">Name</label>
+    <input class="form__input" v-model.trim="$v.name.$model"/>
+  </div>
+  <div v-if="$v.name.$error">
+    <div class="error" v-if="!$v.name.required">Name is required</div>
+    <div class="error" v-if="!$v.name.minLength">Name must have at least {{$v.name.$params.minLength.min}} letters.</div>
+  </div>
+
+  <button class="button" type="submit" :disabled="submitStatus === 'PENDING'">Submit!</button>
+  <p class="typo__p" v-if="submitStatus === 'OK'">Thanks for your submission!</p>
+  <p class="typo__p" v-if="submitStatus === 'ERROR'">Please fill the form correctly.</p>
+  <p class="typo__p" v-if="submitStatus === 'PENDING'">Sending...</p>
+</form>
   <div class=" w-10/12 md:w-5/12 m-auto py-10">
         <form @submit.prevent="addEvent">
-      <div class="mb-6">
+      <div class="mb-6 form-group">
         <label for="event_title" class="label">Event Name</label>
         <input
           type="text"
@@ -12,7 +27,7 @@
           autofocus
           autocomplete="off"
           placeholder="Type Event Name"
-          v-model.trim="$v.newEvent.title.$model">
+          v-model.trim="newEvent.title">
       </div>
       <div class="mb-6">
         <label for="event_description" class="label">Event Description</label>
@@ -23,7 +38,7 @@
           autofocus
           autocomplete="off"
           placeholder="Type Event Description"
-          v-model="$v.newEvent.description.$model"></textarea>
+          v-model="newEvent.description"></textarea>
       </div>
       <div class="mb-6">
         <label for="event_duration" class="label">Duration</label>
@@ -115,7 +130,13 @@ export default {
   name: 'CreateEvent',
   data () {
     return {
-      newEvent: [],
+      newEvent: {
+        title: '',
+        description: ''
+      },
+      name: '',
+      age: 0,
+      submitStatus: null,
       events: [],
       error: ''
     }
@@ -130,6 +151,10 @@ export default {
         required,
         minLength: minLength(8)
       }
+    },
+    name: {
+      required,
+      minLength: minLength(4)
     }
   },
   created () {
@@ -138,12 +163,25 @@ export default {
     }
   },
   methods: {
+    submit () {
+      console.log('submit!')
+      this.$v.$touch()
+      if (this.$v.$invalid) {
+        this.submitStatus = 'ERROR'
+      } else {
+        // do your submit logic here
+        this.submitStatus = 'PENDING'
+        setTimeout(() => {
+          this.submitStatus = 'OK'
+        }, 500)
+      }
+    },
     setError (error, text) {
       this.error = (error.response && error.response.data && error.response.data.error) || text
     },
     addEvent () {
-      this.$v.$touch()
-      if (this.$v.$pending || this.$v.$error) return
+      this.v$.$touch()
+      if (this.v$.$pending || this.v$.$error) return
       const value = this.newEvent
       if (!value) {
         return
@@ -160,3 +198,10 @@ export default {
   }
 }
 </script>
+<style lang="scss" scoped>
+.form-group--error {
+  input {
+    border: 1px solid red !important;
+  }
+}
+</style>
