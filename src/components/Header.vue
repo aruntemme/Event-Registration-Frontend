@@ -9,7 +9,6 @@
       <div class="flex flex-row gap-2">
         <router-link
           to="/events"
-          v-if="!signedIn()"
           class=" w-12/12 p-2 text-sm font-medium text-white bg-black rounded-md bg-opacity-20 hover:bg-opacity-30 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75"
         >
           Dashboard
@@ -51,6 +50,27 @@
               >
                 <div class="px-1 py-1">
                   <MenuItem class="" v-slot="{ active }">
+                    <div
+                      :class="[
+                        active ? 'bg-violet-500 text-white' : 'text-white',
+                        'group flex rounded-md items-center  w-full px-2 py-2 text-sm bg-purple-600'
+                      ]"
+                      v-if="signedIn()"
+                      >{{ this.userEmail }}</div
+                    >
+                  </MenuItem>
+                  <MenuItem class="" v-slot="{ active }">
+                    <router-link
+                      :class="[
+                             active ? 'bg-violet-500 text-white' : 'text-gray-900',
+                        'group flex rounded-md items-center w-full px-2 py-2 mt-1 text-sm hover:bg-purple-600'
+                      ]"
+                      v-if="signedIn()"
+                      to="/events"
+                      >All Events</router-link
+                    >
+                  </MenuItem>
+                  <MenuItem class="" v-slot="{ active }">
                     <router-link
                       :class="[
                         active ? 'bg-violet-500 text-white' : 'text-gray-900',
@@ -71,7 +91,7 @@
                       ]"
                       to="/events/created"
                       v-if="signedIn()"
-                      >Your Events</router-link
+                      >Created Events</router-link
                     >
                   </MenuItem>
                   <MenuItem class="" v-slot="{ active }">
@@ -122,6 +142,11 @@ export default {
   created () {
     this.signedIn()
   },
+  data () {
+    return {
+      userEmail: ''
+    }
+  },
   methods: {
     setError (error, text) {
       this.error =
@@ -129,6 +154,7 @@ export default {
         text
     },
     signedIn () {
+      this.userEmail = localStorage.email
       return localStorage.signedIn
     },
     signOut () {

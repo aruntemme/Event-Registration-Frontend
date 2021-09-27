@@ -32,7 +32,7 @@
                 </p>
                 <p class="flex felx-row gap-1"><span class="font-semibold uppercase mr-1">Cost: </span> ₹ {{ event.fees }}</p>
                 <p class="flex felx-row gap-1">
-                  <span class="font-semibold uppercase mr-1">Seats Available: </span> {{ event.maxparticipants }}
+                  <span class="font-semibold uppercase mr-1">Seats Available: </span> {{ event.maxparticipants > 0 ? event.maxparticipants : 0 }}
                 </p>
               </div>
             </div>
@@ -54,9 +54,21 @@
             </button>
 
             <button
+              v-else-if="isRegistered"
+              class=" text-sm btn-disabled mt-4 font-bold p-4 rounded-md h-full w-full md:w-7/12"
+            >
+              Registered
+            </button>
+            <button
+              v-else-if="event.maxparticipants <= 0"
+              class=" text-sm btn-disabled mt-4 font-bold p-4 rounded-md h-full w-full md:w-7/12"
+            >
+              Seats Filled
+            </button>
+            <button
               v-else
-              class=" text-sm btn-primary mt-4 font-bold p-4 rounded-md h-full w-full md:w-7/12 "
-              @click.prevent="registerEvent(event)"
+              class=" text-sm btn-primary mt-4 font-bold p-4 rounded-md h-full w-full md:w-7/12"
+              @click="openRegisterModal"
             >
               Register
             </button>
@@ -74,7 +86,7 @@
                     leave-from="opacity-100"
                     leave-to="opacity-0"
                   >
-                    <DialogOverlay className="fixed inset-0  opacity-80 bg-gray-200" />
+                    <DialogOverlay className="fixed inset-0  bg-custom-opacity" />
                   </TransitionChild>
 
                   <span
@@ -130,6 +142,85 @@
               </div>
             </Dialog>
           </TransitionRoot>
+          <TransitionRoot appear :show="isRegisterOpen" as="template">
+            <Dialog as="div" @close="closeRegisterModal">
+              <div class="fixed inset-0 z-10 overflow-y-auto">
+                <div class="min-h-screen px-4 text-center">
+                  <TransitionChild
+                    as="template"
+                    enter="duration-300 ease-out"
+                    enter-from="opacity-0"
+                    enter-to="opacity-100"
+                    leave="duration-200 ease-in"
+                    leave-from="opacity-100"
+                    leave-to="opacity-0"
+                  >
+                    <DialogOverlay className="fixed inset-0  bg-custom-opacity" />
+                  </TransitionChild>
+
+                  <span
+                    class="inline-block h-screen align-middle"
+                    aria-hidden="true"
+                  >
+                    &#8203;
+                  </span>
+
+                  <TransitionChild
+                    as="template"
+                    enter="duration-300 ease-out"
+                    enter-from="opacity-0 scale-95"
+                    enter-to="opacity-100 scale-100"
+                    leave="duration-200 ease-in"
+                    leave-from="opacity-100 scale-100"
+                    leave-to="opacity-0 scale-95"
+                  >
+                    <div
+                      class="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl"
+                    >
+                      <DialogTitle
+                        as="h3"
+                        class="text-lg font-medium leading-6 text-gray-900"
+                      >
+                        Register
+                      </DialogTitle>
+                      <div class="mt-2">
+                        <p class="text-sm text-gray-500">
+                         Register for the event
+                        </p>
+                      </div>
+                      <div class="mt-3">
+                        <label for="names" class="label">Name</label>
+                        <input
+                          type="text"
+                          id="names"
+                          class="input"
+                          autocomplete="off"
+                          placeholder="Enter name"
+                          v-model="name">
+                      </div>
+
+                      <div class="mt-4 flex flex-row gap-4">
+                        <button
+                          type="button"
+                          class="inline-flex justify-center px-4 py-2 text-sm font-medium text-red-800 bg-red-100 border border-transparent rounded-md hover:bg-red-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-red-500"
+                          @click="registerEvent(eventId)"
+                        >
+                          Register
+                        </button>
+                        <button
+                          type="button"
+                          class="inline-flex justify-center px-4 py-2 text-sm font-medium text-blue-900 bg-blue-100 border border-transparent rounded-md hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500"
+                          @click="closeRegisterModal"
+                        >
+                          Close
+                        </button>
+                      </div>
+                    </div>
+                  </TransitionChild>
+                </div>
+              </div>
+            </Dialog>
+          </TransitionRoot>
         </li>
       </ul>
     </div>
@@ -157,22 +248,32 @@ export default {
   },
   setup () {
     const isOpen = ref(false)
+    const isRegisterOpen = ref(false)
     return {
       isOpen,
+      isRegisterOpen,
       closeModal () {
         isOpen.value = false
       },
       openModal () {
         isOpen.value = true
+      },
+      openRegisterModal () {
+        isRegisterOpen.value = true
+      },
+      closeRegisterModal () {
+        isRegisterOpen.value = false
       }
     }
   },
   name: 'Events',
   data () {
     return {
+      name: '',
       event: [],
       error: '',
-      currentUser: ''
+      currentUser: '',
+      isRegistered: false
     }
   },
   created () {
@@ -182,6 +283,16 @@ export default {
       .get(`/api/v1/events/${this.$route.params.id}`)
       .then(response => {
         this.event = response.data
+      })
+      .catch(error => this.setError(error, 'Something went wrong'))
+    this.$http.secured
+      .get(`/api/v1/registrations?event_id=${this.$route.params.id}`)
+      .then(response => {
+        console.log(response)
+        if (response.data[0].id === parseInt(this.$route.params.id, 10)) {
+          this.event = response.data[0]
+          this.isRegistered = true
+        }
       })
       .catch(error => this.setError(error, 'Something went wrong'))
   },
@@ -234,7 +345,32 @@ export default {
     },
     editEvent (id) {
       this.$router.replace(`/events/${id}/edit`)
+    },
+    registerEvent (id) {
+      this.isRegistered = false
+      this.$http.secured.post('/api/v1/registrations/', { registration: { event_id: id }, event_id: id })
+        .then(response => {
+          console.log(response.data.status)
+          console.log(response)
+          if (response.data.status === 'success') {
+            this.event = response.data.event[0]
+            this.isRegistered = true
+            this.closeRegisterModal()
+          }
+          this.registrations.push(response.data)
+        })
+        .catch(error => this.setError(error, 'Cannot create record'))
+    },
+    setError (error, text) {
+      this.error =
+        (error.response && error.response.data && error.response.data.error) ||
+        text
     }
   }
 }
 </script>
+<style lang="scss" scoped>
+.bg-custom-opacity {
+  background-color: rgba(165, 165, 165, 0.74);
+}
+</style>

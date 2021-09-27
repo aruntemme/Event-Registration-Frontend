@@ -24,6 +24,11 @@ export default createRouter({
       component: Dashboard
     },
     {
+      path: '/events/registered',
+      name: 'Registered',
+      component: Dashboard
+    },
+    {
       path: '/events/new',
       name: 'CreateEvent',
       component: CreateEvent

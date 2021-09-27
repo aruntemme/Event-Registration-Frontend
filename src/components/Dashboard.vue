@@ -6,7 +6,8 @@
 
     <ul class="list-reset mt-4">
       <li><h3 class="text-md font-mono uppercase font-semibold text-gray-700 border-b mb-4 pb-6 mx-2"><router-link to="/events">All Events</router-link>{{title}}</h3></li>
-      <li class="py-4 mx-2" v-for="event in events" :key="event.id" :record="event">
+      <h3 class="py-4 mx-2 uppercase font-semibold font-mono text-2xl" v-if="emptyEvent"> no events </h3>
+      <li class="py-4 mx-2" v-for="event in availableEvents" :key="event.title" :record="event">
           <router-link :to="{ name: 'event', params: { id: event.id }}" >
         <div class="flex border border-gray-400 p-4 rounded-md shadow-sm cursor-pointer focus:shadow-lg hover:shadow-lg ">
           <div class="flex flex-col gap-2 justify-between pr-4 w-full ">
@@ -26,7 +27,7 @@
               </div>
             <div class="flex felx-col gap-1 md:col-span-1 col-span-2 bg-purple-200 rounded-lg justify-center items-center  w-full h-12 text-center text-white">
               <unicon name="user-plus" fill="black"></unicon>
-              <p class="text-black">{{ event.maxparticipants }}</p>
+              <p class="text-black">{{ event.maxparticipants > 0 ? event.maxparticipants : 0 }}</p>
             </div>
             <div class="flex felx-col gap-1 md:col-span-1 col-span-2 bg-purple-200 rounded-lg justify-center items-center  w-full h-12 text-center text-white">
               <unicon name="map-marker-alt" fill="black"></unicon>
@@ -62,12 +63,18 @@ export default {
       error: '',
       editedRecord: '',
       title: '',
-      userEmail: ''
+      userEmail: '',
+      emptyEvent: false
     }
   },
   watch: {
     $route (to, from) {
       this.renderCurrentCards()
+    }
+  },
+  computed: {
+    availableEvents () {
+      return this.events.filter(event => event.maxparticipants > 0)
     }
   },
   created () {
@@ -76,27 +83,43 @@ export default {
   },
   methods: {
     renderCurrentCards () {
-      let events = []
-      this.$http.secured.get('/api/v1/events')
-        .then((response) => {
-          events = response.data
-          this.events = []
-          events.forEach((value, index) => {
-            if (this.$route.name === 'created') {
-              if (!localStorage.csrf) {
-                this.$router.replace('/events')
-              }
-              if (value.createdby === localStorage.email) {
-                this.events.push(value)
-                this.title = ' > Created Events'
-              }
-            } else {
-              this.title = ''
-              this.events.push(value)
+      this.emptyEvent = false
+      this.events = []
+      if (this.$route.name === 'created') {
+        if (!localStorage.csrf) {
+          this.$router.replace('/events')
+        }
+        this.$http.secured.get('/api/v1/events?current_user=1')
+          .then((response) => {
+            console.log(response.data)
+            if (response.data.length <= 0) {
+              this.emptyEvent = true
             }
+
+            this.events = response.data
+            this.title = ' > Created Events'
           })
-        })
-        .catch(error => this.setError(error, 'Something went wrong'))
+          .catch(error => this.setError(error, 'Something went wrong'))
+      } else if (this.$route.name === 'Registered') {
+        this.$http.secured.get('/api/v1/registrations?current_user=1')
+          .then(response => {
+            if (response.data.length <= 0) {
+              this.emptyEvent = true
+            }
+            this.events = response.data
+            this.title = ' > Registered Events'
+          })
+      } else {
+        this.$http.secured.get('/api/v1/events?all=1')
+          .then((response) => {
+            if (response.data.length <= 0) {
+              this.emptyEvent = true
+            }
+            this.events = response.data
+            this.title = ''
+          })
+          .catch(error => this.setError(error, 'Something went wrong'))
+      }
     },
     convertIntoTags (tags) {
       const tagsArray = tags.split(',')

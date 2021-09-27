@@ -1,6 +1,6 @@
 <template>
-  <div id="app">
-    <router-view/>
+  <div id="app" class="flex flex-col h-screen justify-between">
+    <router-view class="mb-auto "/>
     <Footer />
   </div>
 </template>
