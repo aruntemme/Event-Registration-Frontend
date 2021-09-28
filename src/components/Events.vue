@@ -292,6 +292,7 @@ export default {
         console.log(response)
         if (response.data[0].id === parseInt(this.$route.params.id, 10)) {
           this.event = response.data[0]
+          this.event.date = this.event.date.substring(0, 10)
           this.isRegistered = true
         }
       })

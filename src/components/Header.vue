@@ -7,12 +7,48 @@
         >
       </div>
       <div class="flex flex-row gap-2">
-        <router-link
-          to="/events"
-          class=" w-12/12 p-2 text-sm font-medium text-white bg-black rounded-md bg-opacity-20 hover:bg-opacity-30 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75"
-        >
-          Dashboard
-        </router-link>
+        <Menu as="div" class="relative inline-block text-left">
+            <div>
+              <MenuButton
+                class="inline-flex justify-center w-full px-4 py-2 text-sm font-medium text-white bg-black rounded-md bg-opacity-20 hover:bg-opacity-30 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75"
+              >
+                <unicon name="bell" fill="white"></unicon>
+              </MenuButton>
+            </div>
+
+            <transition
+              enter-active-class="transition duration-100 ease-out"
+              enter-from-class="transform scale-95 opacity-0"
+              enter-to-class="transform scale-100 opacity-100"
+              leave-active-class="transition duration-75 ease-in"
+              leave-from-class="transform scale-100 opacity-100"
+              leave-to-class="transform scale-95 opacity-0"
+            >
+              <MenuItems
+                class="absolute right-0 w-56 mt-2  origin-top-right bg-white divide-y divide-gray-100 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+              >
+                <div class="px-1 py-1" v-if="notifications.length > 0">
+                  <MenuItem class="" v-slot="{ active }" v-for="notification in notifications" :key="notification.id">
+                    <div
+                      :class="[
+                        active ? 'bg-violet-500 text-gray-900' : 'text-gray-900',
+                        'group flex rounded-md items-center w-full px-2 py-2 border hover:border text-sm'
+                      ]"
+                      >{{notification.event_name}} Event has been {{notification.action}}
+                      <button class="rounded-full w-5 h-5 text-lg text-red-700 mr-1 mb-3 font-semibold" @click="remove(notification)">x</button></div>
+                  </MenuItem>
+                </div>
+                <div class="px-1 py-1" v-else>
+                  <MenuItem class="" >
+                    <div
+                      class="text-gray-900 group flex rounded-md my-4 mx-2 items-center w-full px-2 py-2 text-sm"
+                      >No Notifications</div
+                    >
+                  </MenuItem>
+                </div>
+              </MenuItems>
+            </transition>
+          </Menu>
         <router-link
           to="/signin"
           v-if="!signedIn()"
@@ -141,30 +177,27 @@ export default {
   },
   created () {
     this.signedIn()
+    this.$http.secured
+      .get('/api/v1/notifications?current_user=1')
+      .then(response => {
+        console.log(response)
+        this.notifications = response.data
+      })
   },
   data () {
     return {
       userEmail: '',
-      message: 'Hello world'
-    }
-  },
-  channels: {
-    ChatChannel: {
-      connected () {},
-      rejected () {},
-      received (data) {},
-      disconnected () {}
+      notifications: ''
     }
   },
   methods: {
-    sendMessage: function () {
-      this.$cable.perform({
-        channel: 'ChatChannel',
-        action: 'send_message',
-        data: {
-          content: this.message
-        }
-      })
+    remove (item) {
+      this.$http.secured
+        .delete(`/api/v1/notifications/${item.id}`)
+        .then(response => {
+          this.notifications.splice(this.notifications.indexOf(item), 1)
+        })
+        .catch(error => this.setError(error, 'Cannot delete notification'))
     },
     setError (error, text) {
       this.error =
@@ -186,12 +219,6 @@ export default {
         })
         .catch(error => this.setError(error, 'Cannot sign out'))
     }
-  },
-  mounted () {
-    this.$cable.subscribe({
-      channel: 'ChatChannel',
-      room: 'public'
-    })
   }
 }
 </script>

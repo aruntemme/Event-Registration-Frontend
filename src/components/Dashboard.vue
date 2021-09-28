@@ -9,7 +9,7 @@
       <h3 class="py-4 mx-2 uppercase font-semibold font-mono text-2xl" v-if="emptyEvent"> no events </h3>
       <li class="py-4 mx-2" v-for="event in availableEvents" :key="event.title" :record="event">
           <router-link :to="{ name: 'event', params: { id: event.id }}" >
-        <div class="flex border border-gray-400 p-4 rounded-md shadow-sm cursor-pointer focus:shadow-lg hover:shadow-lg ">
+        <div class="flex border border-gray-200 p-4 rounded-md shadow-sm cursor-pointer focus:shadow-lg hover:shadow-lg ">
           <div class="flex flex-col gap-2 justify-between pr-4 w-full ">
           <p class="flex font-semibold text-3xl items-center">
             {{ event.title }}
@@ -33,10 +33,6 @@
               <unicon name="map-marker-alt" fill="black"></unicon>
               <p class="text-black">{{ event.location }}</p>
             </div>
-            <div class="flex felx-col gap-1  col-span-4 bg-purple-200 rounded-lg justify-center items-center w-full  px-1 h-12 text-center text-white">
-              <unicon name="user-circle" fill="black"></unicon>
-              <p class="text-black">{{ event.createdby === userEmail ? 'you' : event.createdby }}</p>
-              </div>
           </div>
         </div>
         </div>

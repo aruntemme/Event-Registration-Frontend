@@ -13,10 +13,9 @@ import {
   uniUserPlus,
   uniAngleDown,
   uniUserCircle,
-  uniMapMarkerAlt
+  uniMapMarkerAlt,
+  uniBell
 } from 'vue-unicons/dist/icons'
-
-import ActionCableVueJWT from 'actioncable-vue-jwt'
 
 Unicon.add([
   uniStopwatch,
@@ -25,7 +24,8 @@ Unicon.add([
   uniUserPlus,
   uniAngleDown,
   uniUserCircle,
-  uniMapMarkerAlt
+  uniMapMarkerAlt,
+  uniBell
 ])
 
 createApp({
@@ -39,14 +39,5 @@ createApp({
   .use(VueAxios, {
     secured: securedAxiosInstance,
     plain: plainAxiosInstance
-  })
-  .use(ActionCableVueJWT, {
-    debug: true,
-    debugLevel: 'error',
-    connectionUrl: 'ws://localhost:3000/api/cable',
-    connectImmediately: false,
-    jwt: function () {
-      this.$auth.getToken()
-    }
   })
   .mount('#app')
