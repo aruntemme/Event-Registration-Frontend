@@ -116,23 +116,35 @@
           v-model="newEvent.maxparticipants">
         <div class="text-red-700  text-sm p-1" v-if="error.maxparticipants">{{error.maxparticipants}}</div>
       </div>
-      <div class="mb-6">
-        <label for="event_fields" class="label">Required Fields</label>
-        <input
-          type="text"
-          id="event_fields"
-          class="input"
-          autocomplete="off"
-          :class="{'danger-input': error.configurefields }"
-          @keypress="removeError"
-          placeholder="Enter "
-          v-model="newEvent.configurefields">
-        <div class="text-red-700  text-sm p-1" v-if="error.configurefields">{{error.configurefields}}</div>
+      <p class="uppercase font-semibold mt-4 mb-1"> List down the fields for participants</p>
+      <p class="uppercase text-xs my-1 mb-3">Example: (name, email, phonenumber)</p>
+        <div class="form-group" v-for="(field, index) in configurefields" :key="index">
+          <div class="flex flex-row md:justify-between gap-1">
+            <div class="flex md:flex-row flex-col gap-1">
+              <div class="mt-2">
+                <label for="event_fields" class="label">Field Name</label>
+                <input
+                  type="text"
+                  class="input"
+                  autocomplete="off"
+                  @keypress="removeError"
+                  placeholder="Enter Field Name"
+                  v-model="field.field">
+              </div>
+              <div class="my-2 md:self-end">
+                <input type="checkbox" class="ml-2" :id="index" v-model="field.required">
+                <label class="ml-3" :for="index">{{ field.required ? 'Required' : 'Not Required' }}</label>
+            </div>
+          </div>
+          <div class="flex felx-row gap-1">
+            <button type="button" class="md:mt-5 mt-9 md:self-end border-2 text-xl bg-green-100 border-green-600 w-12 md:h-10 h-8 rounded-lg" @click="addAnotherField(index)" v-show="index == configurefields.length-1"> + </button>
+            <button type="button" class="md:mt-5 mt-9 md:self-end border-2 text-xl bg-red-100 border-red-600 w-12 md:h-10 h-8 rounded-lg" @click="removeCurrentField(index)" v-show="index || ( !index && configurefields.length > 1)"> -</button>
+          </div>
+        </div>
       </div>
-        <div class="text-red-700  text-sm p-1" v-if="responseError">{{responseError}}</div>
-
-      <input type="submit" v-if="isEdit" value="Update Event" class="btn-primary p-4 w-full rounded-md font-semibold cursor-pointer text-white">
-      <input type="submit" v-else value="Add Event" class="btn-primary p-4 w-full rounded-md font-semibold cursor-pointer text-white">
+      <div class="text-red-700  text-sm p-1" v-if="responseError">{{responseError}}</div>
+      <input type="submit" v-if="isEdit" value="Update Event" class="mt-8 btn-primary p-4 w-full rounded-md font-semibold cursor-pointer text-white">
+      <input type="submit" v-else value="Add Event" class="mt-8 btn-primary p-4 w-full rounded-md font-semibold cursor-pointer text-white">
     </form>
   </div>
   </div>
@@ -150,7 +162,11 @@ export default {
       newEvent: [],
       error: [],
       responseError: '',
-      isEdit: false
+      isEdit: false,
+      configurefields: [{
+        field: '',
+        required: true
+      }]
     }
   },
   created () {
@@ -171,9 +187,19 @@ export default {
     }
   },
   methods: {
+    addAnotherField () {
+      this.configurefields.push({
+        field: '',
+        required: ''
+      })
+    },
+    removeCurrentField (index) {
+      this.configurefields.splice(index, 1)
+    },
     setCurrentEvent (EventData) {
       this.newEvent = EventData
       this.newEvent.date = this.newEvent.date.substring(0, 10)
+      this.configurefields = JSON.parse(EventData.configurefields)
     },
     // remove error message when typing again
     removeError () {
@@ -209,7 +235,6 @@ export default {
       this.error.maxparticipants = this.validate(value.maxparticipants, isNumber)
       this.error.tags = this.validate(value.tags)
       this.error.date = this.validate(value.date)
-      this.error.configurefields = this.validate(value.configurefields)
       const inputData = {
         title: value.title,
         description: value.description,
@@ -219,10 +244,9 @@ export default {
         maxparticipants: value.maxparticipants,
         tags: value.tags,
         date: value.date,
-        configurefields: value.configurefields,
+        configurefields: JSON.stringify(this.configurefields),
         createdby: localStorage.email
       }
-      console.log(inputData)
       if (!this.error.title &&
         !this.error.description &&
         !this.error.duration &&
@@ -230,9 +254,7 @@ export default {
         !this.error.fees &&
         !this.error.tags &&
         !this.error.maxparticipants &&
-        !this.error.configurefields &&
         !this.error.date) {
-        console.log('complete')
         if (this.isEdit) {
           this.$http.secured.patch(`/api/v1/events/${this.eventId}`, { event: inputData })
             .then(response => {

@@ -180,7 +180,6 @@ export default {
     this.$http.secured
       .get('/api/v1/notifications?current_user=1')
       .then(response => {
-        console.log(response)
         this.notifications = response.data
       })
   },

@@ -87,7 +87,6 @@ export default {
         }
         this.$http.secured.get('/api/v1/events?current_user=1')
           .then((response) => {
-            console.log(response.data)
             if (response.data.length <= 0) {
               this.emptyEvent = true
             }

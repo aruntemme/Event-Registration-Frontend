@@ -181,24 +181,21 @@
                         as="h3"
                         class="text-lg font-medium leading-6 text-gray-900"
                       >
-                        Register
+                        Register for the event
                       </DialogTitle>
-                      <div class="mt-2">
-                        <p class="text-sm text-gray-500">
-                         Register for the event
-                        </p>
+                      <div v-for="form,index in registrationFormFields" :key="index">
+                        <div class="mt-3">
+                          <label for="names" class="label uppercase">{{form.field}}</label>
+                          <input
+                            type="text"
+                            id="names"
+                            class="input"
+                            autocomplete="off"
+                            :placeholder="'Enter '+form.field"
+                            v-model="formvalues[form.field]">
                       </div>
-                      <div class="mt-3">
-                        <label for="names" class="label">Name</label>
-                        <input
-                          type="text"
-                          id="names"
-                          class="input"
-                          autocomplete="off"
-                          placeholder="Enter name"
-                          v-model="name">
                       </div>
-
+                      <div class="text-red-700  text-sm p-1" v-if="formerror">Please Fill all the fields</div>
                       <div class="mt-4 flex flex-row gap-4">
                         <button
                           type="button"
@@ -273,23 +270,30 @@ export default {
       event: [],
       error: '',
       currentUser: '',
-      isRegistered: false
+      isRegistered: false,
+      formvalues: {},
+      formerror: false
     }
   },
   created () {
+    this.formerror = false
+    this.formvalues = {}
     this.eventId = this.$route.params.id
     this.currentUser = localStorage.email
     this.$http.secured
       .get(`/api/v1/events/${this.$route.params.id}`)
       .then(response => {
         this.event = response.data
+        this.registrationFormFields = JSON.parse(response.data.configurefields)
+        Object.keys(this.registrationFormFields).forEach(i => {
+          this.formvalues[this.registrationFormFields[i].field] = ''
+        })
         this.event.date = this.event.date.substring(0, 10)
       })
       .catch(error => this.setError(error, 'Something went wrong'))
     this.$http.secured
       .get('/api/v1/registrations?current_user=1')
       .then(response => {
-        console.log(response)
         if (response.data[0].id === parseInt(this.$route.params.id, 10)) {
           this.event = response.data[0]
           this.event.date = this.event.date.substring(0, 10)
@@ -350,18 +354,22 @@ export default {
     },
     registerEvent (id) {
       this.isRegistered = false
-      this.$http.secured.post('/api/v1/registrations/', { registration: { event_id: id }, event_id: id })
-        .then(response => {
-          console.log(response.data.status)
-          console.log(response)
-          if (response.data.status === 'success') {
-            this.event = response.data.event
-            this.isRegistered = true
-            this.closeRegisterModal()
-          }
-          this.registrations.push(response.data)
-        })
-        .catch(error => this.setError(error, 'Cannot create record'))
+      const isValidated = Object.keys(this.formvalues).every(k => this.formvalues[k] !== '')
+      if (isValidated) {
+        this.$http.secured.post('/api/v1/registrations/', { registration: { event_id: id }, event_id: id })
+          .then(response => {
+            this.formerror = false
+            if (response.data.status === 'success') {
+              this.event = response.data.event
+              this.isRegistered = true
+              this.closeRegisterModal()
+            }
+            this.registrations.push(response.data)
+          })
+          .catch(error => this.setError(error, 'Cannot create record'))
+      } else {
+        this.formerror = true
+      }
     },
     setError (error, text) {
       this.error =
