@@ -144,10 +144,28 @@ export default {
   },
   data () {
     return {
-      userEmail: ''
+      userEmail: '',
+      message: 'Hello world'
+    }
+  },
+  channels: {
+    ChatChannel: {
+      connected () {},
+      rejected () {},
+      received (data) {},
+      disconnected () {}
     }
   },
   methods: {
+    sendMessage: function () {
+      this.$cable.perform({
+        channel: 'ChatChannel',
+        action: 'send_message',
+        data: {
+          content: this.message
+        }
+      })
+    },
     setError (error, text) {
       this.error =
         (error.response && error.response.data && error.response.data.error) ||
@@ -168,6 +186,12 @@ export default {
         })
         .catch(error => this.setError(error, 'Cannot sign out'))
     }
+  },
+  mounted () {
+    this.$cable.subscribe({
+      channel: 'ChatChannel',
+      room: 'public'
+    })
   }
 }
 </script>

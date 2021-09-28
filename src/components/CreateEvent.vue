@@ -173,6 +173,7 @@ export default {
   methods: {
     setCurrentEvent (EventData) {
       this.newEvent = EventData
+      this.newEvent.date = this.newEvent.date.substring(0, 10)
     },
     // remove error message when typing again
     removeError () {

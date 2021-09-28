@@ -283,10 +283,11 @@ export default {
       .get(`/api/v1/events/${this.$route.params.id}`)
       .then(response => {
         this.event = response.data
+        this.event.date = this.event.date.substring(0, 10)
       })
       .catch(error => this.setError(error, 'Something went wrong'))
     this.$http.secured
-      .get(`/api/v1/registrations?event_id=${this.$route.params.id}`)
+      .get('/api/v1/registrations?current_user=1')
       .then(response => {
         console.log(response)
         if (response.data[0].id === parseInt(this.$route.params.id, 10)) {
@@ -353,7 +354,7 @@ export default {
           console.log(response.data.status)
           console.log(response)
           if (response.data.status === 'success') {
-            this.event = response.data.event[0]
+            this.event = response.data.event
             this.isRegistered = true
             this.closeRegisterModal()
           }
