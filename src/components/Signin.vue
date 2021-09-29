@@ -109,7 +109,7 @@ export default {
     },
     checkSignedIn () {
       if (localStorage.signedIn) {
-        this.$router.replace('/events')
+        this.$router.replace('/')
       }
     }
   }

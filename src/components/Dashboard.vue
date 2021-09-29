@@ -89,7 +89,7 @@ export default {
       this.events = []
       if (this.$route.name === 'created') {
         if (!localStorage.csrf) {
-          this.$router.replace('/events')
+          this.$router.replace('/')
         }
         this.$http.secured.get('/api/v1/events?current_user=1')
           .then((response) => {

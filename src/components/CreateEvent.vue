@@ -157,7 +157,7 @@ export default {
   },
   created () {
     if (!localStorage.signedIn) {
-      this.$router.replace('/signin')
+      this.$router.replace('/')
     }
     this.isEdit = false
     if (this.$route.name === 'EditEvent') {

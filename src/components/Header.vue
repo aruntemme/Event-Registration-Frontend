@@ -51,7 +51,7 @@
             </transition>
           </Menu>
         <router-link
-          to="/signin"
+          to="/"
           v-if="!signedIn()"
           class=" w-12/12 p-2 text-sm font-medium text-white bg-black rounded-md bg-opacity-20 hover:bg-opacity-30 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75"
         >
@@ -218,7 +218,7 @@ export default {
           delete localStorage.csrf
           delete localStorage.email
           delete localStorage.signedIn
-          this.$router.replace('/signin')
+          this.$router.replace('/')
         })
         .catch(error => this.setError(error, 'Cannot sign out'))
     }

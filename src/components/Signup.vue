@@ -120,7 +120,7 @@ export default {
     },
     checkedSignedIn () {
       if (localStorage.signedIn) {
-        this.$router.replace('/events')
+        this.$router.replace('/')
       }
     }
   }
