@@ -92,7 +92,7 @@ export default {
       this.events = []
       // events created by the user
       if (this.$route.name === 'created') {
-        if (!localStorage.csrf) {
+        if (!localStorage.signedIn) {
           this.$router.replace('/events')
         }
         this.$http.secured.get('/api/v1/events?current_user=1')

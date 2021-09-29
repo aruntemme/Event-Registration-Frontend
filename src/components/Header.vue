@@ -219,7 +219,8 @@ export default {
       this.$http.secured
         .delete('/signin')
         .then(response => {
-          delete localStorage.csrf
+          delete localStorage.jwt
+          delete localStorage.refresh
           delete localStorage.email
           delete localStorage.signedIn
           this.$router.replace('/')

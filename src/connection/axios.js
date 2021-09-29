@@ -20,10 +20,10 @@ const plainAxiosInstance = axios.create({
 
 securedAxiosInstance.interceptors.request.use(config => {
   const method = config.method.toUpperCase()
-  if (method !== 'OPTIONS' && method !== 'GET') {
+  if (method !== 'OPTIONS') {
     config.headers = {
       ...config.headers,
-      'X-CSRF-TOKEN': localStorage.csrf
+      Authorization: `Bearer ${localStorage.jwt}`
     }
   }
   return config
@@ -36,18 +36,20 @@ securedAxiosInstance.interceptors.response.use(null, error => {
     error.response.status === 401
   ) {
     return plainAxiosInstance
-      .post('/refresh', {}, { headers: { 'X-CSRF-TOKEN': localStorage.csrf } })
+      .post('/refresh', {}, { headers: { 'X-Refresh-Token': localStorage.refresh } })
       .then(response => {
-        localStorage.csrf = response.data.csrf
+        localStorage.refresh = response.data.refresh
+        localStorage.jwt = response.data.access
         localStorage.signedIn = true
 
         const retryConfig = error.response.config
-        retryConfig.headers['X-CSRF-TOKEN'] = localStorage.csrf
+        retryConfig.headers['X-Refresh-Token'] = localStorage.refresh
         return plainAxiosInstance.request(retryConfig)
       })
       .catch(error => {
         console.log(error)
-        delete localStorage.csrf
+        delete localStorage.refresh
+        delete localStorage.jwt
         delete localStorage.signedIn
         location.replace('/')
         return Promise.reject(error)

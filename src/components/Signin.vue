@@ -92,11 +92,12 @@ export default {
     },
     // sigin success method
     signinSuccessful (response) {
-      if (!response.data.csrf) {
+      if (!response.data.access) {
         this.signinFailed(response)
         return
       }
-      localStorage.csrf = response.data.csrf
+      localStorage.jwt = response.data.access
+      localStorage.refresh = response.data.refresh
       localStorage.email = this.email
       localStorage.signedIn = true
       this.error = ''
@@ -106,7 +107,8 @@ export default {
     signinFailed (error) {
       this.isLoading = false
       this.error = (error.response && error.response.data && error.response.data.error) || 'Account doesnt exist'
-      delete localStorage.csrf
+      delete localStorage.jwt
+      delete localStorage.refresh
       delete localStorage.signedIn
     },
     // check signedin on page load

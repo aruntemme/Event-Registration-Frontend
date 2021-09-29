@@ -104,12 +104,13 @@ export default {
     },
     // if sign up success redirect to /events
     signupSuccessful (response) {
-      if (!response.data.csrf) {
+      if (!response.data.access) {
         this.signupFailed(response)
         return
       }
 
-      localStorage.csrf = response.data.csrf
+      localStorage.access = response.data.access
+      localStorage.refresh = response.data.refresh
       localStorage.email = this.email
       localStorage.signedIn = true
       this.error = ''
@@ -118,7 +119,8 @@ export default {
     // else display error
     signupFailed (error) {
       this.error = (error.response && error.response.data && error.response.data.error) || 'Something went wrong'
-      delete localStorage.csrf
+      delete localStorage.refresh
+      delete localStorage.jwt
       delete localStorage.signedIn
     },
     // *check signed in on page load and redirect to /events
