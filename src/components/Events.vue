@@ -11,7 +11,7 @@
             {{ event.title }}
           </h3>
         </li>
-        <li class="py-4 mx-2 mt-6 pt-6 border-t" :key="event.id" :record="event">
+        <li class="py-4 mx-2 mt-6 pt-6 border-t" :key="event.id" :event="event">
           <div class="flex mt-4">
             <div class="flex flex-col gap-2 justify-between pr-4">
               <p class="flex font-semibold text-5xl items-center">
@@ -23,16 +23,16 @@
                 v-html="convertIntoTags(event.tags)"
               ></div>
               <div class="flex flex-col gap-4 mt-3">
-                <p class="flex felx-row gap-1"><span class="font-semibold uppercase mr-1">date: </span> {{ event.date }}</p>
+                <p class="flex felx-row gap-1"><span class="font-semibold uppercase mr-1">date: </span> {{ formatDate(event.date) }}</p>
                 <p class="flex felx-row gap-1">
                   <span class="font-semibold uppercase mr-1">Location: </span> {{ event.location }}
-                </p>
-                <p class="flex felx-row gap-1">
-                 <span class="font-semibold uppercase mr-1">Duration: </span> {{ secondsToHms(event.duration) }}
                 </p>
                 <p class="flex felx-row gap-1"><span class="font-semibold uppercase mr-1">Cost: </span> ₹ {{ event.fees }}</p>
                 <p class="flex felx-row gap-1">
                   <span class="font-semibold uppercase mr-1">Seats Available: </span> {{ event.maxparticipants > 0 ? event.maxparticipants : 0 }}
+                </p>
+                <p class="flex felx-row gap-1">
+                  <span class="font-semibold uppercase mr-1">Created by: </span> {{ event.createdby === currentUser ? 'You' : event.createdby }}
                 </p>
               </div>
             </div>
@@ -183,24 +183,24 @@
                       >
                         Register for the event
                       </DialogTitle>
+                      <form  @submit.prevent="registerEvent(eventId)">
                       <div v-for="form,index in registrationFormFields" :key="index">
                         <div class="mt-3">
-                          <label for="names" class="label uppercase">{{form.field}}</label>
+                          <label for="names" class="label uppercase">{{form.field}} <span v-if="form.required" class="text-red-700" >*</span></label>
                           <input
                             type="text"
                             id="names"
                             class="input"
                             autocomplete="off"
                             :placeholder="'Enter '+form.field"
-                            v-model="formvalues[form.field]">
+                            v-model="formvalues[form.field]" :required="form.required">
                       </div>
                       </div>
                       <div class="text-red-700  text-sm p-1" v-if="formerror">Please Fill all the fields</div>
                       <div class="mt-4 flex flex-row gap-4">
                         <button
-                          type="button"
+                          type="submit"
                           class="inline-flex justify-center px-4 py-2 text-sm font-medium text-red-800 bg-red-100 border border-transparent rounded-md hover:bg-red-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-red-500"
-                          @click="registerEvent(eventId)"
                         >
                           Register
                         </button>
@@ -212,6 +212,7 @@
                           Close
                         </button>
                       </div>
+                      </form>
                     </div>
                   </TransitionChild>
                 </div>
@@ -288,15 +289,16 @@ export default {
         Object.keys(this.registrationFormFields).forEach(i => {
           this.formvalues[this.registrationFormFields[i].field] = ''
         })
-        this.event.date = this.event.date.substring(0, 10)
       })
-      .catch(error => this.setError(error, 'Something went wrong'))
+      .catch(error => {
+        this.$router.replace('/events')
+        this.setError(error, 'Something went wrong')
+      })
     this.$http.secured
-      .get('/api/v1/registrations?current_user=1')
+      .get(`/api/v1/registrations?event_id=${this.$route.params.id}`)
       .then(response => {
         if (response.data[0].id === parseInt(this.$route.params.id, 10)) {
           this.event = response.data[0]
-          this.event.date = this.event.date.substring(0, 10)
           this.isRegistered = true
         }
       })
@@ -313,38 +315,13 @@ export default {
         return appendString
       }
     },
-    secondsToHms (value) {
-      const sec = parseInt(value, 10)
-      let hours = Math.floor(sec / 3600)
-      let minutes = Math.floor((sec - hours * 3600) / 60)
-      let seconds = sec - hours * 3600 - minutes * 60
-      if (hours < 10) {
-        hours = '0' + hours
-      }
-      if (minutes < 10) {
-        minutes = '0' + minutes
-      }
-      if (seconds < 10) {
-        seconds = '0' + seconds
-      }
-      // eslint-disable-next-line eqeqeq
-      if (hours == 0) {
-        return +minutes + ' minutes' // Return in MM:SS format
-      } else {
-        let hoursText = ' hours'
-        if (hours === 1) {
-          hoursText = ' hour'
-        }
-        return hours + hoursText + minutes + 'minutes' // Return in HH:MM:SS format
-      }
-    },
     deleteEvent (id) {
       this.$http.secured
         .delete(`/api/v1/events/${id}`)
         .then(response => {
           if (response.data.status === 'success') {
             this.$router.replace('/events')
-            this.events.splice(this.records.indexOf(id), 1)
+            this.events.splice(this.event.indexOf(id), 1)
           }
         })
         .catch(error => this.setError(error, 'Cannot delete Event'))
@@ -354,21 +331,25 @@ export default {
     },
     registerEvent (id) {
       this.isRegistered = false
-      const isValidated = Object.keys(this.formvalues).every(k => this.formvalues[k] !== '')
-      if (isValidated) {
-        this.$http.secured.post('/api/v1/registrations/', { registration: { event_id: id }, event_id: id })
-          .then(response => {
-            this.formerror = false
-            if (response.data.status === 'success') {
-              this.event = response.data.event
-              this.isRegistered = true
-              this.closeRegisterModal()
-            }
-            this.registrations.push(response.data)
-          })
-          .catch(error => this.setError(error, 'Cannot create record'))
-      } else {
-        this.formerror = true
+      this.$http.secured.post('/api/v1/registrations/', { registration: { event_id: id, formdata: JSON.stringify(this.formvalues) }, event_id: id })
+        .then(response => {
+          this.formerror = false
+          if (response.data.status === 'success') {
+            this.event = response.data.event
+            this.isRegistered = true
+            this.closeRegisterModal()
+          }
+          this.registrations.push(response.data)
+        })
+        .catch(error => this.setError(error, 'Cannot create event'))
+    },
+    formatDate (input) {
+      if (input) {
+        input = input.substring(0, 10)
+        const datePart = input.match(/\d+/g)
+        const year = datePart[0].substring(0)
+        const month = datePart[1]; var day = datePart[2]
+        return day + '-' + month + '-' + year
       }
     },
     setError (error, text) {

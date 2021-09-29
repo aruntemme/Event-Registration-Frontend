@@ -36,20 +36,6 @@
         <div class="text-red-700  text-sm p-1" v-if="error.description">{{error.description}}</div>
       </div>
       <div class="mb-6">
-        <label for="event_duration" class="label">Duration</label>
-        <input
-          type="text"
-          :class="{'danger-input': error.duration }"
-          @keypress="removeError"
-          id="event_duration"
-          class="input"
-          autofocus
-          autocomplete="off"
-          placeholder="Duration of the event ( --h --m)"
-          v-model="newEvent.duration">
-       <div class="text-red-700  text-sm p-1" v-if="error.duration">{{error.duration}}</div>
-      </div>
-      <div class="mb-6">
         <label for="event_date" class="label">Date</label>
         <input
           type="date"
@@ -100,7 +86,7 @@
           @keypress="removeError"
           autocomplete="off"
           placeholder="Enter tags separated by , (comma)"
-          v-model="newEvent.tags">
+          v-model.trim="newEvent.tags">
         <div class="text-red-700  text-sm p-1" v-if="error.tags">{{error.tags}}</div>
       </div>
       <div class="mb-6">
@@ -190,7 +176,7 @@ export default {
     addAnotherField () {
       this.configurefields.push({
         field: '',
-        required: ''
+        required: true
       })
     },
     removeCurrentField (index) {
@@ -229,7 +215,6 @@ export default {
       const value = this.newEvent
       this.error.title = this.validate(value.title)
       this.error.description = this.validate(value.description)
-      this.error.duration = this.validate(value.duration)
       this.error.location = this.validate(value.location)
       this.error.fees = this.validate(value.fees, isNumber)
       this.error.maxparticipants = this.validate(value.maxparticipants, isNumber)
@@ -238,7 +223,6 @@ export default {
       const inputData = {
         title: value.title,
         description: value.description,
-        duration: value.duration,
         location: value.location,
         fees: value.fees,
         maxparticipants: value.maxparticipants,
@@ -249,7 +233,6 @@ export default {
       }
       if (!this.error.title &&
         !this.error.description &&
-        !this.error.duration &&
         !this.error.location &&
         !this.error.fees &&
         !this.error.tags &&
@@ -263,7 +246,7 @@ export default {
                 this.newEvent = []
               }
             })
-            .catch(error => this.setError(error, 'Cannot update record'))
+            .catch(error => this.setError(error, 'Cannot update Event'))
         } else {
           this.$http.secured.post('/api/v1/events/', { event: inputData })
             .then(response => {

@@ -7,7 +7,7 @@
     <ul class="list-reset mt-4">
       <li><h3 class="text-md font-mono uppercase font-semibold text-gray-700 border-b mb-4 pb-6 mx-2"><router-link to="/events">All Events</router-link>{{title}}</h3></li>
       <h3 class="py-4 mx-2 uppercase font-semibold font-mono text-2xl" v-if="emptyEvent"> no events </h3>
-      <li class="py-4 mx-2" v-for="event in availableEvents" :key="event.title" :record="event">
+      <li class="py-4 mx-2" v-for="event in availableEvents" :key="event.title" :event="event">
           <router-link :to="{ name: 'event', params: { id: event.id }}" >
         <div class="flex border border-gray-200 p-4 rounded-md shadow-sm cursor-pointer focus:shadow-lg hover:shadow-lg ">
           <div class="flex flex-col gap-2 justify-between pr-4 w-full ">
@@ -18,8 +18,7 @@
           <div class="flex md:flex-row gap-2 w-full flex-wrap"  v-html="convertIntoTags(event.tags)"></div>
           <div class="grid grid-cols-4 gap-4 mt-3">
             <div class="flex felx-col gap-1 md:col-span-1 col-span-2 bg-purple-200 rounded-lg justify-center items-center  w-full h-12 text-center text-white">
-              <unicon name="stopwatch" fill="black"></unicon>
-              <p class="text-black">{{ secondsToHms(event.duration) }}</p>
+              <p class="text-black">{{ formatDate(event.date) }}</p>
             </div>
             <div class="flex felx-col gap-1 md:col-span-1 col-span-2 bg-purple-200 rounded-lg justify-center items-center  w-full h-12 text-center text-white">
               <unicon name="rupee-sign" fill="black"></unicon>
@@ -53,11 +52,8 @@ export default {
   name: 'Events',
   data () {
     return {
-      artists: [],
       events: [],
-      newRecord: [],
       error: '',
-      editedRecord: '',
       title: '',
       userEmail: '',
       emptyEvent: false
@@ -116,6 +112,13 @@ export default {
           .catch(error => this.setError(error, 'Something went wrong'))
       }
     },
+    formatDate (input) {
+      input = input.substring(0, 10)
+      const datePart = input.match(/\d+/g)
+      const year = datePart[0].substring(0)
+      const month = datePart[1]; var day = datePart[2]
+      return day + '-' + month + '-' + year
+    },
     convertIntoTags (tags) {
       const tagsArray = tags.split(',')
       let appendString = ''
@@ -124,46 +127,8 @@ export default {
       })
       return appendString
     },
-    secondsToHms (value) {
-      const sec = parseInt(value, 10)
-      let hours = Math.floor(sec / 3600)
-      let minutes = Math.floor((sec - hours * 3600) / 60)
-      let seconds = sec - hours * 3600 - minutes * 60
-      if (hours < 10) { hours = '0' + hours }
-      if (minutes < 10) { minutes = '0' + minutes }
-      if (seconds < 10) { seconds = '0' + seconds }
-      // eslint-disable-next-line eqeqeq
-      if (hours == 0) {
-        return +minutes + 'm' // Return in MM:SS format
-      } else {
-        return hours + 'h' + minutes + 'm' // Return in HH:MM:SS format
-      }
-    },
     setError (error, text) {
       this.error = (error.response && error.response.data && error.response.data.error) || text
-    },
-    // getArtist (record) {
-    //   const recordArtistValues = this.artists.filter(artist => artist.id === record.artist_id)
-    //   let artist
-
-    //   recordArtistValues.forEach(function (element) {
-    //     artist = element.name
-    //   })
-
-    //   return artist
-    // },
-    addRecord () {
-      const value = this.newRecord
-      if (!value) {
-        return
-      }
-      this.$http.secured.post('/api/v1/records/', { record: { title: this.newRecord.title, year: this.newRecord.year, artist_id: this.newRecord.artist } })
-
-        .then(response => {
-          this.records.push(response.data)
-          this.newRecord = ''
-        })
-        .catch(error => this.setError(error, 'Cannot create record'))
     }
   }
 }

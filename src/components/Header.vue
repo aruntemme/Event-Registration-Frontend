@@ -10,9 +10,10 @@
         <Menu as="div" class="relative inline-block text-left">
             <div>
               <MenuButton
+              @click="getCurrentNotification"
                 class="inline-flex justify-center w-full px-4 py-2 text-sm font-medium text-white bg-black rounded-md bg-opacity-20 hover:bg-opacity-30 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75"
               >
-                <unicon name="bell" fill="white"></unicon>
+                <unicon name="bell" fill="white"></unicon><span v-if="notifications.length > 0" class="w-2 h-2 rounded-full bg-red-600"></span>
               </MenuButton>
             </div>
 
@@ -34,7 +35,7 @@
                         active ? 'bg-violet-500 text-gray-900' : 'text-gray-900',
                         'group flex rounded-md items-center w-full px-2 py-2 border hover:border text-sm'
                       ]"
-                      >{{notification.event_name}} Event has been {{notification.action}}
+                      >{{notification.event_name}} has been {{notification.action}}
                       <button class="rounded-full w-5 h-5 text-lg text-red-700 mr-1 mb-3 font-semibold" @click="remove(notification)">x</button></div>
                   </MenuItem>
                 </div>
@@ -177,11 +178,7 @@ export default {
   },
   created () {
     this.signedIn()
-    this.$http.secured
-      .get('/api/v1/notifications?current_user=1')
-      .then(response => {
-        this.notifications = response.data
-      })
+    this.getCurrentNotification()
   },
   data () {
     return {
@@ -190,6 +187,13 @@ export default {
     }
   },
   methods: {
+    getCurrentNotification () {
+      this.$http.secured
+        .get('/api/v1/notifications?current_user=1')
+        .then(response => {
+          this.notifications = response.data
+        })
+    },
     remove (item) {
       this.$http.secured
         .delete(`/api/v1/notifications/${item.id}`)
