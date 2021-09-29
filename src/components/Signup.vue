@@ -68,6 +68,7 @@ export default {
   },
   methods: {
     signup () {
+      // validate fields
       if (this.email == null || this.email === '') {
         this.errorEmail = 'Please Enter Email'
       } else if (!this.reg.test(this.email)) {
@@ -101,6 +102,7 @@ export default {
       this.error = ''
       this.errorPassword = ''
     },
+    // if sign up success redirect to /events
     signupSuccessful (response) {
       if (!response.data.csrf) {
         this.signupFailed(response)
@@ -113,11 +115,13 @@ export default {
       this.error = ''
       this.$router.replace('/events')
     },
+    // else display error
     signupFailed (error) {
       this.error = (error.response && error.response.data && error.response.data.error) || 'Something went wrong'
       delete localStorage.csrf
       delete localStorage.signedIn
     },
+    // *check signed in on page load and redirect to /events
     checkedSignedIn () {
       if (localStorage.signedIn) {
         this.$router.replace('/events')

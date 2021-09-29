@@ -3,7 +3,7 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 import VueAxios from 'vue-axios'
-import { securedAxiosInstance, plainAxiosInstance } from './server/axios'
+import { securedAxiosInstance, plainAxiosInstance } from './connection/axios'
 import './main.css'
 import Unicon from 'vue-unicons'
 import {

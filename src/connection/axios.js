@@ -47,10 +47,10 @@ securedAxiosInstance.interceptors.response.use(null, error => {
       })
       .catch(error => {
         console.log(error)
-        // delete localStorage.csrf
-        // delete localStorage.signedIn
-        // location.replace('/')
-        // return Promise.reject(error)
+        delete localStorage.csrf
+        delete localStorage.signedIn
+        location.replace('/')
+        return Promise.reject(error)
       })
   } else {
     return Promise.reject(error)

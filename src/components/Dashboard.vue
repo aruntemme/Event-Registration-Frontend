@@ -67,11 +67,13 @@ export default {
       isloading: false
     }
   },
+  // render cards again whenever the route changes
   watch: {
     $route (to, from) {
       this.renderCurrentCards()
     }
   },
+  // filter available events
   computed: {
     availableEvents () {
       return this.events.filter(event => event.maxparticipants > 0)
@@ -83,10 +85,12 @@ export default {
     this.renderCurrentCards()
   },
   methods: {
+    // render events cards based on the routes
     renderCurrentCards () {
       this.isloading = true
       this.emptyEvent = false
       this.events = []
+      // events created by the user
       if (this.$route.name === 'created') {
         if (!localStorage.csrf) {
           this.$router.replace('/events')
@@ -101,6 +105,7 @@ export default {
             this.title = ' > Created Events'
           })
           .catch(error => this.setError(error, 'Something went wrong'))
+          // events registered by the user
       } else if (this.$route.name === 'Registered') {
         this.$http.secured.get('/api/v1/registrations?current_user=1')
           .then(response => {
@@ -111,6 +116,7 @@ export default {
             this.isloading = false
             this.title = ' > Registered Events'
           })
+          // all events
       } else {
         this.$http.secured.get('/api/v1/events?all=1')
           .then((response) => {
@@ -124,6 +130,7 @@ export default {
           .catch(error => this.setError(error, 'Something went wrong'))
       }
     },
+    // format the date input
     formatDate (input) {
       input = input.substring(0, 10)
       const datePart = input.match(/\d+/g)
@@ -131,11 +138,12 @@ export default {
       const month = datePart[1]; var day = datePart[2]
       return day + '-' + month + '-' + year
     },
+    // component for small tags in the card
     convertIntoTags (tags) {
       const tagsArray = tags.split(',')
       let appendString = ''
       tagsArray.forEach(tag => {
-        appendString += `<div class="rounded-lg py-1 px-2 w-m-xl bg-black bg-opacity-20 border border-gray-400 text-center">${tag}</div>`
+        appendString += `<div class="rounded-lg py-1 px-2 w-m-xl bg-black bg-opacity-20 border text-center">${tag}</div>`
       })
       return appendString
     },

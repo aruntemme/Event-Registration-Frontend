@@ -84,7 +84,7 @@ export default {
           .catch(error => this.signinFailed(error))
       }
     },
-    // remove error message when typing again
+    // !remove error message when typing again
     removeError () {
       this.errorEmail = ''
       this.error = ''
@@ -102,11 +102,15 @@ export default {
       this.error = ''
       this.$router.replace('/events')
     },
+    // if faled clear data and display error
     signinFailed (error) {
+      this.isLoading = false
       this.error = (error.response && error.response.data && error.response.data.error) || 'Account doesnt exist'
       delete localStorage.csrf
       delete localStorage.signedIn
     },
+    // check signedin on page load
+    // *if yes redirect to /events
     checkSignedIn () {
       if (localStorage.signedIn) {
         this.$router.replace('/events')

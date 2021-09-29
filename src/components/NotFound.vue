@@ -3,7 +3,7 @@
 </template>
 
 <script>
-
+// fallback page for 404 route
 export default {
   name: 'NotFound'
 }

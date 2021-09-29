@@ -7,7 +7,7 @@
         >
       </div>
       <div class="flex flex-row gap-2">
-        <Menu as="div" class="relative inline-block text-left">
+        <Menu as="div" class="relative inline-block text-left" v-if="signedIn()">
             <div>
               <MenuButton
               @click="getCurrentNotification"
@@ -36,7 +36,7 @@
                         'group flex rounded-md items-center w-full px-2 py-2 border hover:border text-sm'
                       ]"
                       >{{notification.event_name}} has been {{notification.action}}
-                      <button class="rounded-full w-5 h-5 text-lg text-red-700 mr-1 mb-3 font-semibold" @click="remove(notification)">x</button></div>
+                      <button class="rounded-full w-5 h-5 text-lg text-red-700 mr-1 mb-3 font-semibold" @click="removeNotification(notification)">x</button></div>
                   </MenuItem>
                 </div>
                 <div class="px-1 py-1" v-else>
@@ -187,6 +187,7 @@ export default {
     }
   },
   methods: {
+    // get current notification of the current user
     getCurrentNotification () {
       this.$http.secured
         .get('/api/v1/notifications?current_user=1')
@@ -194,7 +195,8 @@ export default {
           this.notifications = response.data
         })
     },
-    remove (item) {
+    // remove the notification from state and db
+    removeNotification (item) {
       this.$http.secured
         .delete(`/api/v1/notifications/${item.id}`)
         .then(response => {
@@ -207,10 +209,12 @@ export default {
         (error.response && error.response.data && error.response.data.error) ||
         text
     },
+    // check signed in
     signedIn () {
       this.userEmail = localStorage.email
       return localStorage.signedIn
     },
+    // signout the current user
     signOut () {
       this.$http.secured
         .delete('/signin')

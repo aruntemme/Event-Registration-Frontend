@@ -251,6 +251,7 @@ export default {
     DialogTitle,
     Spinner
   },
+  // configs for headless ui dialog box
   setup () {
     const isOpen = ref(false)
     const isRegisterOpen = ref(false)
@@ -290,6 +291,7 @@ export default {
     this.formvalues = {}
     this.eventId = this.$route.params.id
     this.currentUser = localStorage.email
+    // render events data
     this.$http.secured
       .get(`/api/v1/events/${this.$route.params.id}`)
       .then(response => {
@@ -304,6 +306,7 @@ export default {
         this.$router.replace('/events')
         this.setError(error, 'Something went wrong')
       })
+      // check if he is registered or not?
     this.$http.secured
       .get(`/api/v1/registrations?event_id=${this.$route.params.id}`)
       .then(response => {
@@ -326,6 +329,7 @@ export default {
         return appendString
       }
     },
+    // method to delete the event in db and state
     deleteEvent (id) {
       this.$http.secured
         .delete(`/api/v1/events/${id}`)
@@ -337,9 +341,11 @@ export default {
         })
         .catch(error => this.setError(error, 'Cannot delete Event'))
     },
+    // edit reroute to CreateEvent page
     editEvent (id) {
       this.$router.replace(`/events/${id}/edit`)
     },
+    // to register the event (form fields for register events are dynamically generated)
     registerEvent (id) {
       this.isRegistered = false
       this.$http.secured.post('/api/v1/registrations/', { registration: { event_id: id, formdata: JSON.stringify(this.formvalues) }, event_id: id })
