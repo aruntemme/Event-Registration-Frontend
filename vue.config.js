@@ -1,4 +1,4 @@
 module.exports = {
   lintOnSave: false,
-  publicPath: process.env.NODE_ENV === 'production' ? '/hello-world/' : '/'
+  publicPath: process.env.NODE_ENV === 'production' ? '/er-frontend/' : '/'
 }
