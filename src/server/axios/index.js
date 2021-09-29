@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_URL = 'http://event-reg-backend.herokuapp.com'
+const API_URL = 'https://event-reg-backend.herokuapp.com'
 
 const securedAxiosInstance = axios.create({
   baseURL: API_URL,
@@ -48,7 +48,7 @@ securedAxiosInstance.interceptors.response.use(null, error => {
       .catch(error => {
         delete localStorage.csrf
         delete localStorage.signedIn
-        location.replace('/signin')
+        location.replace('/')
         return Promise.reject(error)
       })
   } else {

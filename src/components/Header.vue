@@ -218,7 +218,7 @@ export default {
           delete localStorage.csrf
           delete localStorage.email
           delete localStorage.signedIn
-          this.$router.replace('/events')
+          this.$router.replace('/')
         })
         .catch(error => this.setError(error, 'Cannot sign out'))
     }
