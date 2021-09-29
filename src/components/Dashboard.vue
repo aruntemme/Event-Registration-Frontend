@@ -1,7 +1,12 @@
 <template>
 <div>
 <Header />
-  <div class=" w-10/12 md:w-6/12 m-auto py-10">
+<div class="flex h-screen" v-if="isloading">
+  <div class="m-auto">
+  <spinner />
+  </div>
+</div>
+  <div v-else class=" w-10/12 md:w-6/12 m-auto py-10">
     <div class="text-red" v-if="error">{{ error }}</div>
 
     <ul class="list-reset mt-4">
@@ -44,10 +49,12 @@
 
 <script>
 import Header from './Header.vue'
+import Spinner from './Spinner.vue'
 
 export default {
   components: {
-    Header
+    Header,
+    Spinner
   },
   name: 'Events',
   data () {
@@ -56,7 +63,8 @@ export default {
       error: '',
       title: '',
       userEmail: '',
-      emptyEvent: false
+      emptyEvent: false,
+      isloading: false
     }
   },
   watch: {
@@ -70,11 +78,13 @@ export default {
     }
   },
   created () {
+    this.isloading = true
     this.userEmail = localStorage.email
     this.renderCurrentCards()
   },
   methods: {
     renderCurrentCards () {
+      this.isloading = true
       this.emptyEvent = false
       this.events = []
       if (this.$route.name === 'created') {
@@ -86,8 +96,8 @@ export default {
             if (response.data.length <= 0) {
               this.emptyEvent = true
             }
-
             this.events = response.data
+            this.isloading = false
             this.title = ' > Created Events'
           })
           .catch(error => this.setError(error, 'Something went wrong'))
@@ -98,6 +108,7 @@ export default {
               this.emptyEvent = true
             }
             this.events = response.data
+            this.isloading = false
             this.title = ' > Registered Events'
           })
       } else {
@@ -107,6 +118,7 @@ export default {
               this.emptyEvent = true
             }
             this.events = response.data
+            this.isloading = false
             this.title = ''
           })
           .catch(error => this.setError(error, 'Something went wrong'))

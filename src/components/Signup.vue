@@ -26,6 +26,11 @@
         <button type="submit" class="w-full py-4 mt-5 text-white font-bold px-4 rounded-lg cursor-pointer ">Sign Up</button>
         <p class=" z-30 text-center route-link mt-5"><router-link to="/" >Sign In</router-link> </p>
       </form>
+       <div class="flex my-14" v-if="isloading">
+          <div class="m-auto">
+          <spinner />
+          </div>
+        </div>
     </div>
   </div>
   </div>
@@ -33,10 +38,12 @@
 
 <script>
 import LoginHeader from './Login-Header.vue'
+import Spinner from './Spinner.vue'
 export default {
   name: 'Signup',
   components: {
-    LoginHeader
+    LoginHeader,
+    Spinner
   },
   data () {
     return {
@@ -47,11 +54,13 @@ export default {
       errorEmail: '',
       errorPassword: '',
       errorConfirmPassword: '',
+      isloading: false,
       // eslint-disable-next-line no-useless-escape
       reg: /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,24}))$/
     }
   },
   created () {
+    this.isloading = false
     this.checkedSignedIn()
   },
   updated () {
@@ -81,6 +90,7 @@ export default {
         this.errorConfirmPassword = false
       }
       if (!this.errorEmail && !this.errorConfirmPassword) {
+        this.isloading = true
         this.$http.plain.post('/signup', { email: this.email, password: this.password_confirmation })
           .then(response => this.signupSuccessful(response))
           .catch(error => this.signupFailed(error))

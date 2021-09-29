@@ -1,7 +1,12 @@
 <template>
   <div>
     <Header />
-    <div class=" w-10/12 md:w-6/12 m-auto py-10">
+    <div class="flex h-screen" v-if="isloading">
+      <div class="m-auto">
+      <spinner />
+      </div>
+    </div>
+    <div v-else class=" w-10/12 md:w-6/12 m-auto py-10">
       <ul class="list-reset mt-4">
         <li>
           <h3
@@ -235,6 +240,7 @@ import {
   DialogOverlay,
   DialogTitle
 } from '@headlessui/vue'
+import Spinner from './Spinner.vue'
 export default {
   components: {
     Header,
@@ -242,7 +248,8 @@ export default {
     TransitionChild,
     Dialog,
     DialogOverlay,
-    DialogTitle
+    DialogTitle,
+    Spinner
   },
   setup () {
     const isOpen = ref(false)
@@ -273,10 +280,12 @@ export default {
       currentUser: '',
       isRegistered: false,
       formvalues: {},
-      formerror: false
+      formerror: false,
+      isloading: false
     }
   },
   created () {
+    this.isloading = true
     this.formerror = false
     this.formvalues = {}
     this.eventId = this.$route.params.id
@@ -288,6 +297,7 @@ export default {
         this.registrationFormFields = JSON.parse(response.data.configurefields)
         Object.keys(this.registrationFormFields).forEach(i => {
           this.formvalues[this.registrationFormFields[i].field] = ''
+          this.isloading = false
         })
       })
       .catch(error => {
@@ -300,6 +310,7 @@ export default {
         if (response.data[0].id === parseInt(this.$route.params.id, 10)) {
           this.event = response.data[0]
           this.isRegistered = true
+          this.isloading = false
         }
       })
       .catch(error => this.setError(error, 'Something went wrong'))
@@ -335,6 +346,7 @@ export default {
         .then(response => {
           this.formerror = false
           if (response.data.status === 'success') {
+            this.isloading = false
             this.event = response.data.event
             this.isRegistered = true
             this.closeRegisterModal()
