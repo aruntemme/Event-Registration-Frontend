@@ -6,4 +6,4 @@
 [[headers]]
   for = "/*"
   [headers.values]
-    Content-Security-Policy = "default-src 'self' https://event-reg-backend.herokuapp.com;"
+    Content-Security-Policy = "default-src 'self' https://event-reg-backend.herokuapp.com; style-src 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=' 'sha256-VWe8j+sQ9/RHQM6TyGioNGksvqVhRHLokKrbzUKYG1w=';"
