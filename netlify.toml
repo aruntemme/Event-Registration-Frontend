@@ -2,3 +2,8 @@
   from = "/*"
   to = "/"
   status = 200
+  
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy: default-src https://event-reg-backend.herokuapp.com
