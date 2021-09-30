@@ -119,7 +119,7 @@
               </div>
               <div class="my-2 md:self-end">
                 <input type="checkbox" class="ml-2" :id="index" v-model="field.required">
-                <label class="ml-3" :for="index">{{ Required }}</label>
+                <label class="ml-3" :for="index"> Required </label>
             </div>
           </div>
           <div class="flex felx-row gap-1">
@@ -129,11 +129,6 @@
         </div>
       </div>
       <div class="text-red-700  text-sm p-1" v-if="responseError">{{responseError}}</div>
-       <div class="flex my-14" v-if="isloading">
-          <div class="m-auto">
-            <spinner />
-          </div>
-        </div>
       <input type="submit" v-if="isEdit" value="Update Event" class="mt-8 btn-primary p-4 w-full rounded-md font-semibold cursor-pointer text-white">
       <input type="submit" v-else value="Add Event" class="mt-8 btn-primary p-4 w-full rounded-md font-semibold cursor-pointer text-white">
     </form>
@@ -143,11 +138,9 @@
 
 <script>
 import Header from './Header.vue'
-import Spinner from './Spinner'
 export default {
   components: {
-    Header,
-    Spinner
+    Header
   },
   name: 'CreateEvent',
   data () {
@@ -155,16 +148,14 @@ export default {
       newEvent: [],
       error: [],
       responseError: '',
-      isLoading: false,
       isEdit: false,
       configurefields: [{
-        field: '',
+        field: 'Name',
         required: true
       }]
     }
   },
   created () {
-    this.isLoading = false
     // kick him if not logged in
     if (!localStorage.signedIn) {
       this.$router.replace('/events')
@@ -175,7 +166,6 @@ export default {
       this.isEdit = true
       this.eventId = this.$route.params.id
       this.currentUser = localStorage.email
-      this.isLoading = true
       this.$http.secured
         .get(`/api/v1/events/${this.$route.params.id}`)
         .then(response => {
@@ -202,7 +192,6 @@ export default {
       this.newEvent = EventData
       this.newEvent.date = this.newEvent.date.substring(0, 10)
       this.configurefields = JSON.parse(EventData.configurefields)
-      this.isLoading = false
     },
     // remove error message when typing again
     removeError () {
@@ -259,26 +248,22 @@ export default {
         !this.error.date) {
         // if the route is events/:id/edit then update
         if (this.isEdit) {
-          this.isLoading = true
           this.$http.secured.patch(`/api/v1/events/${this.eventId}`, { event: inputData })
             .then(response => {
               if (response.data.status === 'success') {
                 this.$router.replace(`/events/${this.eventId}`)
                 this.newEvent = []
-                this.isLoading = false
               }
             })
             .catch(error => this.setError(error, 'Cannot update Event'))
         // else insert
         } else {
-          this.isLoading = true
           this.$http.secured.post('/api/v1/events/', { event: inputData })
             .then(response => {
               if (response.data.status === 'success') {
                 this.$router.replace('/events')
                 this.events.push(response.data.event)
                 this.newEvent = []
-                this.isLoading = false
               }
             })
             .catch(error => this.setError(error, 'Cannot create Event'))
