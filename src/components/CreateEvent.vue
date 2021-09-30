@@ -119,7 +119,7 @@
               </div>
               <div class="my-2 md:self-end">
                 <input type="checkbox" class="ml-2" :id="index" v-model="field.required">
-                <label class="ml-3" :for="index">{{ field.required ? 'Required' : 'Not Required' }}</label>
+                <label class="ml-3" :for="index">{{ Required }}</label>
             </div>
           </div>
           <div class="flex felx-row gap-1">
