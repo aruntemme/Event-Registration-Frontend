@@ -5,7 +5,7 @@ import Dashboard from '@/components/Dashboard.vue'
 import Events from '@/components/Events.vue'
 import CreateEvent from '@/components/CreateEvent.vue'
 import NotFound from '@/components/NotFound.vue'
-
+import Record from '@/components/Record.vue'
 export default createRouter({
   history: createWebHistory(),
   routes: [
@@ -22,6 +22,11 @@ export default createRouter({
       path: '/events/created',
       name: 'created',
       component: Dashboard
+    },
+    {
+      path: '/record',
+      name: 'record',
+      component: Record
     },
     {
       path: '/events/registered',
