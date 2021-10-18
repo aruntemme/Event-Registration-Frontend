@@ -39,6 +39,10 @@
                 <p class="flex felx-row gap-1">
                   <span class="font-semibold uppercase mr-1">Created by: </span> {{ event.createdby === currentUser ? 'You' : event.createdby }}
                 </p>
+                <video width="400" controls>
+                    <source :src="event.url" type="video/webm">
+                    Your browser does not support HTML video.
+                </video>
               </div>
             </div>
           </div>
@@ -282,7 +286,8 @@ export default {
       isRegistered: false,
       formvalues: {},
       formerror: false,
-      isloading: false
+      isloading: false,
+      registrationFormFields: false
     }
   },
   created () {
@@ -295,14 +300,18 @@ export default {
     this.$http.secured
       .get(`/api/v1/events/${this.$route.params.id}`)
       .then(response => {
-        this.event = response.data
-        this.registrationFormFields = JSON.parse(response.data.configurefields)
-        Object.keys(this.registrationFormFields).forEach(i => {
-          this.formvalues[this.registrationFormFields[i].field] = ''
-          this.isloading = false
-        })
+        this.event = response.data.event
+        this.event.url = response.data.video_url
+        if (response.data.event.configurefields) {
+          this.registrationFormFields = JSON.parse(response.data.event.configurefields)
+          Object.keys(this.registrationFormFields).forEach(i => {
+            this.formvalues[this.registrationFormFields[i].field] = ''
+            this.isloading = false
+          })
+        }
       })
       .catch(error => {
+        console.log(error)
         this.$router.replace('/events')
         this.setError(error, 'Something went wrong')
       })

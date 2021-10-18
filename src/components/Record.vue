@@ -151,9 +151,18 @@ export default {
     submitVideo () {
       this.isSaveDisabled = true
       this.isRetakeDisabled = true
-      var data = this.player.recordedData
-      var formData = new FormData()
+      const data = this.player.recordedData
+      const formData = new FormData()
       formData.append('video', data, data.name)
+      this.$http.secured.post('/api/v1/events/', formData)
+        .then(response => {
+          if (response.data.status === 'success') {
+            this.$router.replace('/events')
+            this.events.push(response.data.event)
+            this.newEvent = []
+          }
+        })
+        .catch(error => this.setError(error, 'Cannot create Event'))
       this.submitText = 'Uploading ' + data.name
       console.log('uploading recording:', data.name)
       this.player.record().stopDevice()

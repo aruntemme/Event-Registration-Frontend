@@ -7,6 +7,13 @@
         >
       </div>
       <div class="flex flex-row gap-2">
+        <router-link
+          to="/record"
+          v-if="signedIn()"
+          class=" w-12/12 p-2 text-sm font-medium bg-purple-800 bg-opacity-70 text-white rounded-md hover:bg-purple-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75"
+        >
+          Record
+        </router-link>
         <Menu as="div" class="relative inline-block text-left" v-if="signedIn()">
             <div>
               <MenuButton
