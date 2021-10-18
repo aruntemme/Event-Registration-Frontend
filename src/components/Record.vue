@@ -1,37 +1,50 @@
 <template>
   <div>
     <Header />
-    <div class="flex h-screen" v-if="isloading">
-      <div class="m-auto">
-      <spinner />
-      </div>
-    </div>
-    <div v-else class=" w-10/12 md:w-6/12 m-auto py-10">
+    <div class=" w-10/12 md:w-6/12 m-auto py-10">
       <ul class="list-reset mt-4">
         <li>
           <h3
             class="text-md font-mono uppercase font-semibold text-gray-700 mx-2"
           >
-            <router-link to="/events">Record</router-link> >
-            {{ event.title }}
+            <router-link to="/events">Recorder</router-link>
           </h3>
         </li>
         <li>
-          <div>
-            <video id="myVideo" playsinline class="video-js vjs-default-skin">
-                <p class="vjs-no-js">
-                    To view this video please enable JavaScript, or consider upgrading to a
-                    web browser that
-                    <a href="https://videojs.com/html5-video-support/" target="_blank">
-                        supports HTML5 video.
-                    </a>
-                </p>
-            </video>
-            <br>
-            <button type="button" class="btn btn-info rounded-md border border-gray-600 px-2 py-1 m-2" @click.prevent="startStopRecording()" id="btnStart">{{ startState.text }}</button>
-            <button type="button" class="btn btn-success rounded-md border border-gray-600 px-2 py-1 m-2" @click.prevent="submitVideo()" v-bind:disabled="isSaveDisabled" id="btnSave">{{ submitText }}</button>
-            <button type="button" class="btn btn-primary rounded-md border border-gray-600 px-2 py-1 m-2" @click.prevent="retakeVideo()" v-bind:disabled="isRetakeDisabled" id="btnRetake">Retake</button>
-          </div>
+          <!-- Intro -->
+          <section id="intro" class="flex mx-auto flex-col py-12 items-center" v-show="intro">
+            <button class="btn-primary rounded-md border p-1 m-1 w-1/2" @click="startCamera">Open Camera</button>
+            <p class="p-1 m-1"> It will ask permission for camera and microphone</p>
+          </section>
+          <!-- Recorder -->
+          <section id="recorder" v-show="recorder">
+            <video ref="video" autoplay playsinline muted></video>
+              <button class="bg-red-400 rounded-md border p-1 m-1" @click="closeCamera">
+                close
+              </button>
+              <button class="btn-primary rounded-md border p-1 m-1" @click="flipCamera" v-if="!recording">
+                Flip Camera
+              </button>
+              <button class="btn-primary rounded-md border p-1 m-1 stop" @click="endRecording" v-if="recording">
+                stop
+              </button>
+              <button class="btn-primary rounded-md border p-1 m-1 record" @click="startRecording" v-else>
+                Record Video
+              </button>
+          </section>
+          <!-- Preview -->
+          <section id="preview" v-show="preview">
+            <video ref="preview" autoplay playsinline controls loop></video>
+            <button class="bg-red-400 rounded-md border p-1 m-1" @click="closePreview">
+              close
+            </button>
+            <button class="btn-primary rounded-md border p-1 m-1" @click="toggleMute">
+              {{ muted ? 'muted' : 'mute' }}
+            </button>
+            <a class="bg-gradient-to-br from-purple-800 to-purple-600 text-white rounded-md border p-1 m-1" :href="downloadLink">
+              Download
+            </a>
+          </section>
         </li>
       </ul>
     </div>
@@ -39,146 +52,115 @@
 </template>
 
 <script>
-import 'video.js/dist/video-js.css'
-import 'videojs-record/dist/css/videojs.record.css'
-import videojs from 'video.js'
-import 'webrtc-adapter'
-import RecordRTC from 'recordrtc'
-// eslint-disable-next-line no-unused-vars
-import Record from 'videojs-record/dist/videojs.record.js'
-// eslint-disable-next-line no-unused-vars
-import FFmpegjsEngine from 'videojs-record/dist/plugins/videojs.record.ffmpegjs.js'
+
 import Header from './Header.vue'
-import Spinner from './Spinner.vue'
 export default {
   props: ['uploadUrl'],
   components: {
-    Header,
-    Spinner
+    Header
   },
   data () {
     return {
-      name: '',
-      event: [],
-      error: '',
-      startState: {
-        status: true,
-        text: 'Start'
-      },
-      currentUser: '',
-      isRegistered: false,
-      formvalues: {},
-      formerror: false,
-      isloading: false,
-      player: '',
-      retake: 0,
-      isSaveDisabled: true,
-      isStartRecording: false,
-      isRetakeDisabled: true,
-      submitText: 'Share',
-      options: {
-        controls: true,
-        bigPlayButton: false,
-        controlBar: {
-          deviceButton: false,
-          recordToggle: false,
-          pipToggle: false
-        },
-        width: 500,
-        height: 300,
-        fluid: true,
-        plugins: {
-          record: {
-            pip: false,
-            audio: true,
-            video: true,
-            maxLength: 25,
-            debug: true
-          }
-        }
-      }
+      blob: null,
+      blobs: [],
+      facingMode: 'user',
+      intro: true,
+      muted: false,
+      preview: false,
+      previewing: false,
+      recorder: false,
+      recording: false,
+      stream: null,
+      downloadLink: ''
     }
-  },
-  mounted () {
-    this.player = videojs('myVideo', this.options, () => {
-      // print version information at startup
-      var msg = 'Using video.js ' + videojs.VERSION +
-                ' with videojs-record ' + videojs.getPluginVersion('record') +
-                ' and recordrtc ' + RecordRTC.version
-      videojs.log(msg)
-    })
-    // error handling
-    this.player.on('deviceReady', () => {
-      this.player.record().start()
-      console.log('device ready:')
-    })
-    this.player.on('deviceError', () => {
-      console.log('device error:', this.player.deviceErrorCode)
-    })
-    this.player.on('error', (element, error) => {
-      console.error(error)
-    })
-    // user clicked the record button and started recording
-    this.player.on('startRecord', () => {
-      console.log('started recording!')
-    })
-    // user completed recording and stream is available
-    this.player.on('finishRecord', () => {
-      this.isSaveDisabled = false
-      if (this.retake === 0) {
-        this.isRetakeDisabled = false
-      }
-      // the blob object contains the recorded data that
-      // can be downloaded by the user, stored on server etc.
-      console.log('finished recording: ', this.player.recordedData)
-    })
   },
   methods: {
-    startStopRecording () {
-      this.isStartRecording = true
-      if (this.startState.status) {
-        this.startState.status = false
-        this.startState.text = 'Stop'
-        this.player.record().getDevice()
-      } else {
-        this.startState.status = true
-        this.isSaveDisabled = true
-        this.isRetakeDisabled = true
-        this.player.record().stopDevice()
-        this.startState.text = 'Start'
+    async startCamera () {
+      this.stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: {
+          facingMode: this.facingMode
+        }
+      })
+
+      this.$refs.video.srcObject = this.stream
+
+      this.intro = false
+      this.preview = false
+      this.recorder = true
+
+      this.mediaRecorder = new MediaRecorder(this.stream)
+
+      this.mediaRecorder.ondataavailable = event => {
+        if (event.data) {
+          this.blobs.push(event.data)
+        }
+      }
+
+      this.mediaRecorder.onstart = () => {
+        this.recording = true
+      }
+
+      this.mediaRecorder.onstop = () => {
+        this.recording = false
+
+        this.doPreview()
       }
     },
-    submitVideo () {
-      this.isSaveDisabled = true
-      this.isRetakeDisabled = true
-      const data = this.player.recordedData
-      const formData = new FormData()
-      formData.append('video', data, data.name)
-      this.$http.secured.post('/api/v1/events/', formData)
-        .then(response => {
-          if (response.data.status === 'success') {
-            this.$router.replace('/events')
-            this.events.push(response.data.event)
-            this.newEvent = []
-          }
-        })
-        .catch(error => this.setError(error, 'Cannot create Event'))
-      this.submitText = 'Uploading ' + data.name
-      console.log('uploading recording:', data.name)
-      this.player.record().stopDevice()
+    flipCamera () {
+      this.stopCamera()
+
+      if (this.facingMode === 'environment') {
+        this.facingMode = 'user'
+      } else {
+        this.facingMode = 'environment'
+      }
+
+      this.startCamera()
     },
-    retakeVideo () {
-      this.isSaveDisabled = true
-      this.startState.text = 'Stop'
-      this.isRetakeDisabled = true
-      this.startState.status = false
-      this.retake += 1
-      this.player.record().start()
-    }
-  },
-  beforeUnmount () {
-    if (this.player) {
-      this.player.dispose()
+    stopCamera () {
+      this.stream.getTracks().forEach(track => track.stop())
+
+      this.stream = null
+    },
+    closeCamera () {
+      this.stopCamera()
+
+      this.recorder = false
+      this.intro = true
+    },
+    startRecording () {
+      this.mediaRecorder.start(5000)
+      console.log(`Recorder State : ${this.mediaRecorder.state}`)
+    },
+    endRecording () {
+      this.mediaRecorder.stop()
+      console.log(`Recorder State : ${this.mediaRecorder.state}`)
+      this.stopCamera()
+    },
+    doPreview () {
+      this.blob = new Blob(this.blobs, {
+        type: this.mediaRecorder.mimeType
+      })
+      console.log(this.blobs)
+      this.$refs.preview.src = URL.createObjectURL(this.blob)
+      this.downloadLink = URL.createObjectURL(this.blob)
+
+      this.recorder = false
+      this.preview = true
+    },
+    toggleMute () {
+      this.$refs.preview.muted = !this.$refs.preview.muted
+
+      this.muted = this.$refs.preview.muted
+    },
+    closePreview () {
+      this.$refs.preview.src = null
+
+      this.blobs = []
+      this.blob = null
+
+      this.startCamera()
     }
   }
 }
