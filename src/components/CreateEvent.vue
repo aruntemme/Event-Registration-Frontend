@@ -356,6 +356,7 @@ export default {
           this.isSaveDisabled = true
           this.isRetakeDisabled = true
           const data = this.player.recordedData
+          console.log(data)
           const formData = new FormData()
           formData.append('event[video]', data, data.name)
           formData.append('event[title]', inputData.title)

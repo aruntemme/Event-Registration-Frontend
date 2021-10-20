@@ -54,6 +54,7 @@
 <script>
 
 import Header from './Header.vue'
+import axios from 'axios'
 export default {
   props: ['uploadUrl'],
   components: {
@@ -71,7 +72,17 @@ export default {
       recorder: false,
       recording: false,
       stream: null,
-      downloadLink: ''
+      downloadLink: '',
+      count: 0,
+      uploadId: '',
+      videoName: '',
+      location: '',
+      isMultipart: false,
+      minChunkSize: 5242880,
+      interval: null,
+      tempBlobs: [],
+      tempBlob: null,
+      tempBlobSize: 0
     }
   },
   methods: {
@@ -89,14 +100,61 @@ export default {
       this.preview = false
       this.recorder = true
 
-      this.mediaRecorder = new MediaRecorder(this.stream)
-
-      this.mediaRecorder.ondataavailable = event => {
-        if (event.data) {
-          this.blobs.push(event.data)
+      let options = { videoBitsPerSecond: 2500000, mimeType: 'video/webm;codecs=vp9' }
+      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        console.log(options.mimeType + ' is not Supported')
+        options = { videoBitsPerSecond: 2500000, mimeType: 'video/webm;codecs=vp8' }
+        if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+          console.log(options.mimeType + ' is not Supported')
+          options = { videoBitsPerSecond: 2500000, mimeType: 'video/webm' }
+          if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+            console.log(options.mimeType + ' is not Supported')
+            options = {
+              videoBitsPerSecond: 2500000,
+              mimeType: ''
+            }
+          }
         }
       }
 
+      this.mediaRecorder = new MediaRecorder(this.stream, options)
+
+      this.mediaRecorder.ondataavailable = event => {
+        if (event.data) {
+          console.log(`Triggered Blob Size :${event.data.size}`)
+          event.data.name = this.videoName
+          if (event.data.size < this.minChunkSize) {
+            this.tempBlobs.push(event.data)
+            this.tempBlobSize += event.data.size
+          } else {
+            this.isMultipart = true
+            this.blobs.push(event.data)
+            this.count += 1
+            this.sendMultipartVideo(event.data)
+            console.log(`completed Blob Size :${event.data.size}`)
+          }
+          if (this.tempBlobSize > this.minChunkSize) {
+            this.isMultipart = true
+            this.tempBlob = new Blob(this.tempBlobs, {
+              type: this.mediaRecorder.mimeType
+            })
+            this.tempBlobs = []
+            this.tempBlobSize = 0
+            this.blobs.push(this.tempBlob)
+            this.count += 1
+            this.sendMultipartVideo(this.tempBlob)
+            console.log(`completed Blob Size :${this.tempBlob.size}`)
+          }
+          const recorderState = this.mediaRecorder.state
+          if (recorderState === 'inactive' && event.data.size < this.minChunkSize && !this.isMultipart) {
+            this.blobs.push(event.data)
+            this.sendSingleVideo(event.data)
+          } else if (recorderState === 'inactive' && event.data.size < this.minChunkSize && this.isMultipart) {
+            this.blobs.push(event.data)
+            this.count += 1
+          }
+        }
+      }
       this.mediaRecorder.onstart = () => {
         this.recording = true
       }
@@ -105,7 +163,49 @@ export default {
         this.recording = false
 
         this.doPreview()
+        if (this.isMultipart) {
+          const request = {
+            bucket: 'flicstest',
+            key: this.videoName,
+            upload_id: this.uploadId
+          }
+          axios.post('http://localhost:3000/record/complete_upload', request)
+            .then(response => {
+              this.location = response.data.location
+              console.log(this.location)
+              this.downloadLink = this.location
+            })
+        }
       }
+    },
+    sendMultipartVideo (data) {
+      const formData = {
+        bucket: 'flicstest',
+        key: this.videoName,
+        upload_id: this.uploadId,
+        part_number: this.count,
+        type: 'multiple'
+      }
+      const options = { headers: { 'Content-Type': data.type } }
+      axios.post('http://localhost:3000/record/get_presigned_url', formData)
+        .then(response => {
+          console.log(response)
+          axios.put(response.data.url, data, options)
+        })
+    },
+    sendSingleVideo (data) {
+      const requestData = {
+        bucket: 'flicstest',
+        key: this.videoName,
+        type: 'single'
+      }
+      const options = { headers: { 'Content-Type': data.type } }
+      axios.post('http://localhost:3000/record/get_presigned_url', requestData)
+        .then(response => {
+          console.log(response)
+          axios.put(response.data.url, data, options).then((response) => console.log(response))
+          this.downloadLink = `https://flicstest.s3.ap-south-1.amazonaws.com/${this.videoName}`
+        })
     },
     flipCamera () {
       this.stopCamera()
@@ -130,13 +230,35 @@ export default {
       this.intro = true
     },
     startRecording () {
-      this.mediaRecorder.start(5000)
+      this.mediaRecorder.start()
       console.log(`Recorder State : ${this.mediaRecorder.state}`)
+      this.videoName = `recorded-video-${new Date().toISOString()}.webm`
+      const request = {
+        bucket: 'flicstest',
+        key: this.videoName
+      }
+      axios.post('http://localhost:3000/record/start_upload', request)
+        .then(response => {
+          this.uploadId = response.data.uploadId
+          console.log(this.uploadId)
+        })
+      const self = this
+      this.interval = setInterval(function () {
+        self.captureMedia()
+      }, 5000)
     },
     endRecording () {
       this.mediaRecorder.stop()
       console.log(`Recorder State : ${this.mediaRecorder.state}`)
       this.stopCamera()
+      this.isMultipart = false
+      this.tempBlobs = []
+      this.tempBlobSize = 0
+      this.tempBlob = null
+      clearInterval(this.interval)
+    },
+    captureMedia () {
+      this.mediaRecorder.requestData()
     },
     doPreview () {
       this.blob = new Blob(this.blobs, {
@@ -159,7 +281,8 @@ export default {
 
       this.blobs = []
       this.blob = null
-
+      this.videoName = ''
+      this.count = 0
       this.startCamera()
     }
   }
@@ -168,5 +291,9 @@ export default {
 <style lang="scss" scoped>
 .bg-custom-opacity {
   background-color: rgba(165, 165, 165, 0.74);
+}
+video {
+  -webkit-transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 </style>
