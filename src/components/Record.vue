@@ -122,11 +122,12 @@ export default {
       this.mediaRecorder.ondataavailable = event => {
         if (event.data) {
           console.log(`Triggered Blob Size :${event.data.size}`)
-          event.data.name = this.videoName
           if (event.data.size < this.minChunkSize) {
+            event.data.name = this.videoName
             this.tempBlobs.push(event.data)
             this.tempBlobSize += event.data.size
           } else {
+            event.data.name = this.videoName
             this.isMultipart = true
             this.blobs.push(event.data)
             this.count += 1
@@ -138,19 +139,24 @@ export default {
             this.tempBlob = new Blob(this.tempBlobs, {
               type: this.mediaRecorder.mimeType
             })
+            this.tempBlob.name = this.videoName
             this.tempBlobs = []
             this.tempBlobSize = 0
             this.blobs.push(this.tempBlob)
+            console.log(this.tempBlob)
             this.count += 1
             this.sendMultipartVideo(this.tempBlob)
             console.log(`completed Blob Size :${this.tempBlob.size}`)
           }
           const recorderState = this.mediaRecorder.state
           if (recorderState === 'inactive' && event.data.size < this.minChunkSize && !this.isMultipart) {
+            event.data.name = this.videoName
             this.blobs.push(event.data)
             this.sendSingleVideo(event.data)
           } else if (recorderState === 'inactive' && event.data.size < this.minChunkSize && this.isMultipart) {
+            event.data.name = this.videoName
             this.blobs.push(event.data)
+            console.log(event.data)
             this.count += 1
           }
         }
@@ -164,6 +170,7 @@ export default {
 
         this.doPreview()
         if (this.isMultipart) {
+          this.isMultipart = false
           const request = {
             bucket: 'flicstest',
             key: this.videoName,
@@ -251,7 +258,6 @@ export default {
       this.mediaRecorder.stop()
       console.log(`Recorder State : ${this.mediaRecorder.state}`)
       this.stopCamera()
-      this.isMultipart = false
       this.tempBlobs = []
       this.tempBlobSize = 0
       this.tempBlob = null
